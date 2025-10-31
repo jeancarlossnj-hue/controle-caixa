@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - TechStore Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <!-- jsPDF -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <!-- Aplicação Principal -->
+    <div id="app">
+        <!-- Cabeçalho com Menu Responsivo -->
+        <header class="bg-white shadow-sm">
+            <div class="flex items-center justify-between px-6 py-4">
+                <!-- Logo e nome da loja (lado esquerdo) -->
+                <div class="flex items-center">
+                    <i class="fas fa-store text-2xl text-blue-400"></i>
+                    <span class="logo-text ml-3 text-xl font-bold">TechStore</span>
+                </div>
+
+                <!-- Itens do lado direito -->
+                <div class="flex items-center space-x-4">
+                    <!-- Botão do menu hambúrguer (agora no lado direito) -->
+                    <button id="mobile-menu-button" class="md:hidden text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+
+                    <!-- Ícones de notificação e usuário -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <div
+                                class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center cursor-pointer">
+                                <i class="fas fa-user text-gray-600"></i>
+                            </div>
+                            <span class="ml-2 hidden lg:inline" id="welcome-user">Bem-vindo, <span
+                                    id="user-name"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Mobile (oculto por padrão) - agora alinhado à direita -->
+            <div id="mobile-menu"
+                class="hidden md:hidden bg-gray-800 text-white px-4 py-2 absolute right-0 z-50 w-64 shadow-lg">
+                <!-- No menu mobile, adicione isso no início -->
+                <div class="px-4 py-3 border-b border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-600"></i>
+                        </div>
+                        <span class="ml-3 text-white" id="mobile-user-name"></span>
+                    </div>
+                </div>
+                <nav>
+                    <ul class="space-y-2">
+
+                        <li>
+                            <a href="#" id="acesso-btn"
+                                class="nav-item flex items-center px-4 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white">
+                                <i class="fa-regular fa-circle-user"></i>
+                                <span class="ml-3">Cadastra Login</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="./tblogin.html" id="acesso-logins"
+                                class="nav-item flex items-center px-4 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white">
+                                <i class="fa-solid fa-users"></i>
+                                <span class="ml-3">Usuários</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="login.html" id="logout-btn"
+                                class="nav-item flex items-center px-4 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span class="ml-3">Sair</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- Menu Desktop (horizontal) -->
+            <nav class="hidden md:block bg-gray-800 text-white px-6 py-2">
+                <ul class="flex space-x-4">
+
+                    <li>
+                        <a href="#" id="acessos-btn"
+                            class="nav-item flex items-center px-4 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fa-regular fa-circle-user"></i>
+                            <span class="ml-2">Cadastra Login</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="./tblogin.html" id="acesso-logins"
+                            class="nav-item flex items-center px-4 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fa-solid fa-users"></i>
+                            <span class="ml-2">Usuários</span>
+                        </a>
+                    </li>
+                    <li class="ml-auto">
+                        <a href="login.html" id="logout-btn"
+                            class="nav-item flex items-center px-4 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="ml-2">Sair</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Conteúdo Principal -->
+        <div id="main-content" class="transition-all duration-300">
+            <!-- Botões de Ação (centralizados) -->
+            <div class="flex flex-wrap justify-center gap-5 px-6 py-8">
+                <!-- Container central com max-width para melhor disposição -->
+                <div class="flex flex-wrap justify-center gap-5 w-full max-w-4xl">
+                    <!-- Botão Fazer Venda -->
+                    <button id="sales-btn"
+                        class="flex items-center px-7 py-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl text-lg">
+                        <i class="fas fa-shopping-cart mr-3 text-xl"></i>
+                        <span class="font-medium">Fazer Venda</span>
+                    </button>
+
+                    <!-- Botão Fazer Assistência -->
+                    <button id="services-btn"
+                        class="flex items-center px-7 py-4 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl text-lg">
+                        <i class="fas fa-tools mr-3 text-xl"></i>
+                        <span class="font-medium">Fazer Assistência</span>
+                    </button>
+
+                    <!-- Botão Anotar Saída -->
+                    <button id="expenses-btn"
+                        class="flex items-center px-7 py-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg hover:shadow-xl text-lg">
+                        <i class="fas fa-money-bill-wave mr-3 text-xl"></i>
+                        <span class="font-medium">Anotar Saída</span>
+                    </button>
+
+                    <a id="dashboard-btn" href="dashboard.html"
+                        class="flex items-center px-7 py-4 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl text-lg">
+                        <i class="fas fa-chart-line mr-3 text-xl"></i>
+                        <span class="font-medium">Resumo de Vendas</span>
+                    </a>
+
+
+                    <!-- Botão Tabela de Vendas (âncora) -->
+                    <a href="./tbvendas.html"
+                        class="flex items-center px-7 py-4 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl text-lg">
+                        <i class="fas fa-table mr-3 text-xl"></i>
+                        <span class="font-medium">Tabela de Vendas</span>
+                    </a>
+                    <!-- Botão Tabela de Assistência (âncora) -->
+                    <a href="./tbassistencia.html"
+                        class="flex items-center px-7 py-4 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors shadow-lg hover:shadow-xl text-lg">
+                        <i class="fas fa-table mr-3 text-xl"></i>
+                        <span class="font-medium">Tabela de Assistência</span>
+                    </a>
+
+                    <!-- Botão Tabela de Saídas -->
+                    <a id="tbsaidas-btn" href="./tbsaidas.html"
+                        class="flex items-center px-7 py-4 rounded-lg bg-yellow-600 text-white hover:bg-yellow-700 transition-colors shadow-lg hover:shadow-xl text-lg">
+                        <i class="fas fa-table mr-3 text-xl"></i>
+                        <span class="font-medium">Tabela de Saídas</span>
+                    </a>
+
+                </div>
+            </div>
+
+
+
+            <!-- Modal de Vendas -->
+            <div id="sales-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+                <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+                <div
+                    class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto max-h-screen">
+                    <div class="modal-content py-4 text-left px-6">
+                        <div class="flex justify-between items-center pb-3">
+                            <h3 class="text-2xl font-bold text-gray-800">Nova Venda</h3>
+                            <button type="button" id="close-sales-modal" class="modal-close cursor-pointer z-50">
+                                <i class="fas fa-times text-gray-500 hover:text-gray-700"></i>
+                            </button>
+                        </div>
+
+                        <!-- Formulário de Vendas -->
+                        <form id="sales-form" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Adicione este campo no Modal de Vendas, após o campo de telefone -->
+                                <div>
+                                    <label for="vendedor-venda"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Vendedor</label>
+                                    <select id="vendedor-venda"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                        <option value="">Carregando vendedores...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="customer-name" class="block text-sm font-medium text-gray-700 mb-1">Nome
+                                        do
+                                        Cliente</label>
+                                    <input type="text" id="customer-name"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                </div>
+                                <div>
+                                    <label for="customer-phone"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Número
+                                        (WhatsApp)</label>
+                                    <input type="tel" id="customer-phone"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="(00) 00000-0000" required>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="product-description"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Descrição do Produto</label>
+                                <textarea id="product-description" rows="2"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required></textarea>
+                            </div>
+
+                            <div>
+                                <label for="sale-value" class="block text-sm font-medium text-gray-700 mb-1">Valor
+                                    Vendido</label>
+                                <div class="relative">
+                                    <span
+                                        class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                    <input type="number" step="0.01" id="sale-value"
+                                        class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Forma de Pagamento</label>
+                                <select id="payment-method"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                                    <option value="">Selecione...</option>
+                                    <option value="cash">Dinheiro</option>
+                                    <option value="card">Cartão</option>
+                                    <option value="pix">Pix</option>
+                                    <option value="cash_card">Dinheiro + Cartão</option>
+                                    <option value="cash_pix">Dinheiro + Pix</option>
+                                    <option value="card_pix">Cartão + Pix</option>
+                                    <option value="voucher">Vale</option>
+                                </select>
+                            </div>
+
+                            <!-- Campos para pagamentos combinados -->
+                            <div id="payment-combo-fields"
+                                class="payment-combo-fields grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="payment-part1" class="block text-sm font-medium text-gray-700 mb-1"
+                                        id="payment-part1-label">Parte 1</label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                        <input type="number" step="0.01" id="payment-part1"
+                                            class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="payment-part2" class="block text-sm font-medium text-gray-700 mb-1"
+                                        id="payment-part2-label">Parte 2</label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                        <input type="number" step="0.01" id="payment-part2"
+                                            class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Garantia do Serviço</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="30"
+                                            class="h-4 w-4 text-blue-600" checked>
+                                        <span class="ml-2">30 dias</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="60"
+                                            class="h-4 w-4 text-blue-600">
+                                        <span class="ml-2">60 dias</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="90"
+                                            class="h-4 w-4 text-blue-600">
+                                        <span class="ml-2">90 dias</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="365"
+                                            class="h-4 w-4 text-blue-600">
+                                        <span class="ml-2">1 ano</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button type="button" id="close-services-modal"
+                                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+                                    <i class="fas fa-save mr-2"></i> Salvar Venda
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Assistencia -->
+            <div id="services-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+                <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+                <div
+                    class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto max-h-screen">
+                    <div class="modal-content py-4 text-left px-6">
+                        <div class="flex justify-between items-center pb-3">
+                            <h3 class="text-2xl font-bold text-gray-800">Nova Assistência</h3>
+                            <button id="assistencia-modal" class="modal-close cursor-pointer z-50">
+                                <i class="fas fa-times text-gray-500 hover:text-gray-700"></i>
+                            </button>
+                        </div>
+                        <form id="services-form" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Adicione este campo no Modal de Assistência, após o campo de telefone -->
+                                <div>
+                                    <label for="vendedor-assistencia"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Vendedor</label>
+                                    <select id="vendedor-assistencia"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                        <option value="">Carregando vendedores...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="service-customer-name"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente</label>
+                                    <input type="text" id="service-customer-name"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                </div>
+                                <div>
+                                    <label for="service-customer-phone"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Número (WhatsApp)</label>
+                                    <input type="tel" id="service-customer-phone"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="(00) 00000-0000" required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="device-model" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Marca do Aparelho
+                                    </label>
+                                    <select id="device-model"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                        <option value="">Selecione a marca</option>
+                                        <option value="apple">Apple (iPhone)</option>
+                                        <option value="samsung">Samsung</option>
+                                        <option value="xiaomi">Xiaomi</option>
+                                        <option value="motorola">Motorola</option>
+                                        <option value="lg">LG</option>
+                                        <option value="asus">Asus</option>
+                                        <option value="nokia">Nokia</option>
+                                        <option value="realme">Realme</option>
+                                        <option value="oppo">Oppo</option>
+                                        <option value="outros">Outros</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="device-brand"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Modelo do Aparelho </label>
+                                    <input type="text" id="device-brand"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="defect-description"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Descrição do Defeito</label>
+                                <textarea id="defect-description" rows="2"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required></textarea>
+                            </div>
+
+                            <div>
+                                <label for="service-description"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Serviço a Ser Realizado</label>
+                                <textarea id="service-description" rows="2"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Checklist do Aparelho
+                                </label>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                                    <!-- Aparelho liga -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Aparelho liga</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="liga" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="liga" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <!-- Tela quebrada -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Tela quebrada</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="tela" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="tela" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- imagem -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Reproduz imagem</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="imagen" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="imagen" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Câmera -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Câmeras Funciona</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="camera" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="camera" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                        <label class="flex items-center justify-center space-x-1">
+                                            <input type="radio" name="camera" value="impossivel"
+                                                class="h-4 w-4 text-red-600">
+                                            <span>Impossível testar</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- wifi/Bluetooth -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Wi-Fi/Bluetooth</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="wifi" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="wifi" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                        <label class="flex items-center justify-center space-x-1">
+                                            <input type="radio" name="wifi" value="impossivel"
+                                                class="h-4 w-4 text-red-600">
+                                            <span>Impossível testar</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Som -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Campainha/Auricular</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="som" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="som" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                        <label class="flex items-center justify-center space-x-1">
+                                            <input type="radio" name="som" value="impossivel"
+                                                class="h-4 w-4 text-red-600">
+                                            <span>Impossível testar</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Botões -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Botões</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="botoes" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="botoes" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                        <label class="flex items-center justify-center space-x-1">
+                                            <input type="radio" name="botoes" value="impossivel"
+                                                class="h-4 w-4 text-red-600">
+                                            <span>Impossível testar</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Oxidação -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Molhou</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="oxidacao" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="oxidacao" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <!-- Outra Assistencia -->
+                                    <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                        <span class="font-medium block mb-2">Esteve em outra Assistência</span>
+                                        <div class="flex justify-center space-x-4 mb-2">
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="outra_assistencia" value="sim"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Sim</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1">
+                                                <input type="radio" name="outra_assistencia" value="nao"
+                                                    class="h-4 w-4 text-blue-600">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="font-medium block mb-2">Itens do Aparelho</span>
+                                <!-- Gaveta de Chip-->
+                                <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                    <span class="font-medium block mb-2">Gaveta de Chip</span>
+                                    <div class="flex justify-center space-x-4 mb-2">
+                                        <label class="flex items-center space-x-1">
+                                            <input type="radio" name="gaveta_chip" value="sim"
+                                                class="h-4 w-4 text-blue-600">
+                                            <span>Com</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1">
+                                            <input type="radio" name="gaveta_chip" value="nao"
+                                                class="h-4 w-4 text-blue-600">
+                                            <span>Sem</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- capinha-->
+                                <div class="bg-gray-100 rounded-md p-3 hover:bg-gray-200 text-center">
+                                    <span class="font-medium block mb-2">Capinha</span>
+                                    <div class="flex justify-center space-x-4 mb-2">
+                                        <label class="flex items-center space-x-1">
+                                            <input type="radio" name="capinha" value="sim"
+                                                class="h-4 w-4 text-blue-600">
+                                            <span>Com</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1">
+                                            <input type="radio" name="capinha" value="nao"
+                                                class="h-4 w-4 text-blue-600">
+                                            <span>Sem</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="service-value" class="block text-sm font-medium text-gray-700 mb-1">Valor do
+                                    Serviço</label>
+                                <div class="relative">
+                                    <span
+                                        class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                    <input type="number" step="0.01" id="service-value"
+                                        class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                </div>
+                            </div>
+                            <!-- Forma de Pagamento (Serviço 2) -->
+                            <div>
+                                <label for="service2-payment-method"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Forma de Pagamento</label>
+                                <select id="service2-payment-method"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                                    <option value="">Selecione...</option>
+                                    <option value="cash">Dinheiro</option>
+                                    <option value="card">Cartão</option>
+                                    <option value="pix">Pix</option>
+                                    <option value="cash_card">Dinheiro + Cartão</option>
+                                    <option value="cash_pix">Dinheiro + Pix</option>
+                                    <option value="card_pix">Cartão + Pix</option>
+                                    <option value="voucher">Vale</option>
+                                </select>
+                            </div>
+
+                            <!-- Campos de Pagamento Combinado -->
+                            <div id="service2-payment-combo-fields"
+                                class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                                <div>
+                                    <label for="service2-payment-part1"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
+                                        id="service2-payment-part1-label">Parte 1</label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                        <input type="number" step="0.01" id="service2-payment-part1"
+                                            class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="service2-payment-part2"
+                                        class="block text-sm font-medium text-gray-700 mb-1"
+                                        id="service2-payment-part2-label">Parte 2</label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                        <input type="number" step="0.01" id="service2-payment-part2"
+                                            class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Garantia do Serviço</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="30"
+                                            class="h-4 w-4 text-blue-600" checked>
+                                        <span class="ml-2">30 dias</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="60"
+                                            class="h-4 w-4 text-blue-600">
+                                        <span class="ml-2">60 dias</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="90"
+                                            class="h-4 w-4 text-blue-600">
+                                        <span class="ml-2">90 dias</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="service-warranty" value="365"
+                                            class="h-4 w-4 text-blue-600">
+                                        <span class="ml-2">1 ano</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button type="button" id="cancel-service-modal"
+                                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+                                    <i class="fas fa-save mr-2"></i> Salvar Assistência
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Saídas -->
+            <div id="expenses-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+                <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+                <div
+                    class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+                    <div class="modal-content py-4 text-left px-6">
+                        <div class="flex justify-between items-center pb-3">
+                            <h3 class="text-2xl font-bold text-gray-800">Anotar Saída</h3>
+                            <button id="close-expenses-modal" class="modal-close cursor-pointer z-50">
+                                <i class="fas fa-times text-gray-500 hover:text-gray-700"></i>
+                            </button>
+                        </div>
+
+                        <!-- Formulário de Saídas -->
+                        <form id="expenses-form" class="space-y-4">
+                            <div>
+                                <label for="expense-reason" class="block text-sm font-medium text-gray-700 mb-1">Motivo
+                                    da
+                                    Saída</label>
+                                <input type="text" id="expense-reason"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label for="expense-value"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Valor</label>
+                                <div class="relative">
+                                    <span
+                                        class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                    <input type="number" step="0.01" id="expense-value"
+                                        class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="expense-date"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                                <input type="date" id="expense-date"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label for="expense-employee"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Funcionário Responsável</label>
+                                <select id="expense-employee"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                                    <option value="">Selecione um funcionário</option>
+                                    <!-- Os funcionários serão carregados via JavaScript -->
+                                </select>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button type="button" id="cancel-expense"
+                                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center">
+                                    <i class="fas fa-save mr-2"></i> Salvar Saída
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Cadastra -->
+            <div id="cadastro-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+                <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+                <div
+                    class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+                    <div class="modal-content py-4 text-left px-6">
+                        <div class="flex justify-between items-center pb-3">
+                            <h3 class="text-2xl font-bold text-gray-800">Cadastrar Login</h3>
+                            <button id="close-cadastro-modal" class="modal-close cursor-pointer z-50">
+                                <i class="fas fa-times text-gray-500 hover:text-gray-700"></i>
+                            </button>
+                        </div>
+
+                        <!-- Formulário de Cadastro-->
+                        <form id="formulario-tarefas" class="space-y-4">
+                            <div>
+                                <label for="expense-reason"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Login</label>
+                                <input type="text" id="register-username"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label for="expense-value"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                <div class="relative">
+                                    <input type="password" step="0.01" id="register-password"
+                                        class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                </div>
+                            </div>
+                            <label for="user-role">Função:</label>
+                            <select id="user-role">
+                                <option value="funcionario">Funcionário</option>
+                                <option value="gerente">Gerente</option>
+
+                            </select>
+
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button type="button" id="cancel-cadastro"
+                                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+                                    <i class="fas fa-save mr-2"></i> Salvar Cadastro
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <script src="./pdf-generator.js"></script>
+        <script src="./vendas.js"></script>
+        <script src="./vendedores.js"></script>
+        <script src="./assistencia.js"></script>
+        <script src="./novoscript.js"></script>
+        <script src="./login.js"></script>
+        <script src="./saidas.js"></script>
+
+
+
+        <script>
+            // Controle do menu mobile
+            document.getElementById('mobile-menu-button').addEventListener('click', function () {
+                const menu = document.getElementById('mobile-menu');
+                menu.classList.toggle('hidden');
+            });
+
+            // Função para fechar notificações
+            function hideNotification(id) {
+                document.getElementById(id).classList.add('hidden');
+            }
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const user = localStorage.getItem("loggedInUser");
+                if (!user) {
+                    window.location.href = "login.html"; // volta se não tiver login
+                }
+            });
+
+            function logout() {
+                fetch("http://127.0.0.1:5000/logout", {
+                    method: "POST",
+                    credentials: "include"
+                }).then(() => {
+                    localStorage.removeItem("loggedInUser");
+                    window.location.href = "login.html";
+                });
+            }
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const cargo = localStorage.getItem("userRole") || "Funcionario";
+
+                const dashboardBtn = document.getElementById("dashboard-btn");
+                const tbSaidasBtn = document.getElementById("tbsaidas-btn");
+
+                // 🟪 Bloquear acesso ao DASHBOARD
+                if (cargo !== "Gerente" && dashboardBtn) {
+                    dashboardBtn.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        alert("❌ Apenas gerentes têm acesso ao Dashboard de vendas.");
+                    });
+                    dashboardBtn.classList.add("opacity-50", "cursor-not-allowed");
+                    dashboardBtn.classList.remove("hover:bg-purple-700", "hover:shadow-xl");
+                }
+
+                // 🟨 Bloquear acesso à TABELA DE SAÍDAS
+                if (cargo !== "Gerente" && tbSaidasBtn) {
+                    tbSaidasBtn.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        alert("❌ Apenas gerentes podem acessar a Tabela de Saídas.");
+                    });
+                    tbSaidasBtn.classList.add("opacity-50", "cursor-not-allowed");
+                    tbSaidasBtn.classList.remove("hover:bg-yellow-700", "hover:shadow-xl");
+                }
+            });
+        </script>
+        <script>
+            // Proteção do modal de cadastro e tabela de usuários
+            document.addEventListener("DOMContentLoaded", () => {
+                const cargo = localStorage.getItem("userRole") || "Funcionario";
+
+                if (cargo !== "Gerente") {
+                    // 🔒 Proteção do CADASTRA LOGIN (Menu Mobile)
+                    const acessoBtn = document.getElementById("acesso-btn");
+                    if (acessoBtn) {
+                        acessoBtn.replaceWith(acessoBtn.cloneNode(true));
+                        const newAcessoBtn = document.getElementById("acesso-btn");
+                        newAcessoBtn.addEventListener("click", (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            alert("❌ Apenas gerentes podem cadastrar novos logins.");
+                            return false;
+                        });
+                        newAcessoBtn.classList.add("opacity-50", "cursor-not-allowed");
+                        newAcessoBtn.classList.remove("hover:bg-gray-700", "hover:text-white");
+                    }
+
+                    // 🔒 Proteção do CADASTRA LOGIN (Menu Desktop)
+                    const acessosBtn = document.getElementById("acessos-btn");
+                    if (acessosBtn) {
+                        acessosBtn.replaceWith(acessosBtn.cloneNode(true));
+                        const newAcessosBtn = document.getElementById("acessos-btn");
+                        newAcessosBtn.addEventListener("click", (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            alert("❌ Apenas gerentes podem cadastrar novos logins.");
+                            return false;
+                        });
+                        newAcessosBtn.classList.add("opacity-50", "cursor-not-allowed");
+                        newAcessosBtn.classList.remove("hover:bg-gray-700", "hover:text-white");
+                    }
+
+                    // 🔒 Proteção da TABELA DE USUÁRIOS (Menu Mobile)
+                    const acessoLoginsMobile = document.querySelector("#mobile-menu #acesso-logins");
+                    if (acessoLoginsMobile) {
+                        acessoLoginsMobile.replaceWith(acessoLoginsMobile.cloneNode(true));
+                        const newAcessoLoginsMobile = document.querySelector("#mobile-menu #acesso-logins");
+                        newAcessoLoginsMobile.addEventListener("click", (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            alert("❌ Apenas gerentes podem acessar a lista de usuários.");
+                            return false;
+                        });
+                        newAcessoLoginsMobile.classList.add("opacity-50", "cursor-not-allowed");
+                        newAcessoLoginsMobile.classList.remove("hover:bg-gray-700", "hover:text-white");
+                    }
+
+                    // 🔒 Proteção da TABELA DE USUÁRIOS (Menu Desktop)
+                    const acessoLoginsDesktop = document.querySelector("nav.md\\:block #acesso-logins");
+                    if (acessoLoginsDesktop) {
+                        acessoLoginsDesktop.replaceWith(acessoLoginsDesktop.cloneNode(true));
+                        const newAcessoLoginsDesktop = document.querySelector("nav.md\\:block #acesso-logins");
+                        newAcessoLoginsDesktop.addEventListener("click", (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            alert("❌ Apenas gerentes podem acessar a lista de usuários.");
+                            return false;
+                        });
+                        newAcessoLoginsDesktop.classList.add("opacity-50", "cursor-not-allowed");
+                        newAcessoLoginsDesktop.classList.remove("hover:bg-gray-700", "hover:text-white");
+                    }
+
+                    // Também esconde o modal completamente se ele existir
+                    const cadastroModal = document.getElementById("cadastro-modal");
+                    if (cadastroModal) {
+                        cadastroModal.style.display = 'none';
+                    }
+                }
+            });
+        </script>
+
+
+</body>
+
+</html>

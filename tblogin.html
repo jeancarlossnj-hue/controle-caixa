@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gestão de Usuários - TechStore Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center justify-start">
+    <div class="w-full max-w-7xl px-4 py-6">
+        <!-- Cabeçalho -->
+        <header class="bg-gray-800 shadow-sm w-full mb-6 rounded-md">
+            <div class="flex flex-col sm:flex-row items-center justify-center px-6 py-4 space-y-4 sm:space-y-0">
+                <h1 class="text-2xl font-semibold text-white">Usuários do Sistema</h1>
+            </div>
+        </header>
+        <div class=" p-4 "> 
+            <!-- botão para voltar para dashboard.html -->
+            <a href="./index.html" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+            <i class="fas fa-arrow-left mr-2"></i> Voltar 
+            </a>
+        </div>
+            
+        
+        <!-- Tabela de Usuários -->
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow w-full">
+            <h2 class="text-lg font-semibold mb-4">Lista de Logins</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">
+                                Usuário
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">
+                                Senha
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">
+                                Função
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">
+                                Ações
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="usuarios-table">
+                
+                        <!-- Outras linhas podem ser adicionadas aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Usuário -->
+    <div id="modal-editar"
+        class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md mx-auto">
+            <h3 class="text-lg font-semibold mb-4">Editar Usuário</h3>
+            <form id="form-editar" onsubmit="salvarEdicao(event)">
+                <div class="mb-4">
+                    <label for="input-usuario" class="block mb-1 font-medium">Usuário</label>
+                    <input type="text" id="input-usuario" class="w-full border rounded px-3 py-2" required />
+                </div>
+                <div class="mb-4">
+                    <label for="input-senha" class="block mb-1 font-medium">Senha</label>
+                    <input type="text" id="input-senha" class="w-full border rounded px-3 py-2" required />
+                </div>
+                <div class="mb-4">
+                    <label for="input-funcao" class="block mb-1 font-medium">Função</label>
+                <select id="input-funcao" class="w-full border rounded px-3 py-2" required>
+                <option value="Dono">Administrador</option>
+                <option value="Funcionario">Funcionário</option>
+                <option value="Gerente">Gerente</option>
+                </select>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="fecharModalEditar()"
+                        class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script src="./login.js"></script>
+
+</body>
+
+</html>

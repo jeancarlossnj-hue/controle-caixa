@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - TechStore Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center justify-start">
+    <div class="w-full max-w-7xl px-3 sm:px-4 py-4 sm:py-6">
+        <!-- Cabeçalho com Menu Responsivo -->
+        <header class="bg-white shadow-sm rounded-lg">
+            <div class="px-4 sm:px-6 py-3 sm:py-4">
+                <!-- Nome da loja centralizado -->
+                <div class="flex justify-center items-center mb-3 sm:mb-4">
+                    <i class="fas fa-store text-xl sm:text-2xl text-blue-400 mr-2 sm:mr-3"></i>
+                    <span class="logo-text text-xl sm:text-2xl font-bold text-gray-800">TechStore</span>
+                </div>
+
+                <!-- Botões de navegação -->
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-3">
+                    <div class="flex flex-wrap justify-center gap-2 sm:gap-3 px-2 pb-2 sm:px-6 sm:pb-4">
+                        <!-- Voltar -->
+                        <a href="./index.html"
+                            class="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-500 text-white hover:bg-gray-600 transition-colors text-xs sm:text-sm shadow-sm hover:shadow flex-1 sm:flex-none justify-center min-w-[120px]">
+                            <i class="fas fa-arrow-left mr-1.5 text-xs"></i>
+                            <span>Voltar</span>
+                        </a>
+
+                        <!-- Botão Dashboard -->
+                        <a href="#" onclick="checkDashboardAccess()"
+                            class="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors text-xs sm:text-sm shadow-sm hover:shadow flex-1 sm:flex-none justify-center min-w-[120px]">
+                            <i class="fas fa-table mr-2 text-xs"></i>
+                            <span>Dashboard</span>
+                        </a>
+
+                        <!-- Tabela Assistências -->
+                        <a href="./tbassistencia.html"
+                            class="inline-flex items-center px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 transition-colors text-xs sm:text-sm shadow-sm hover:shadow flex-1 sm:flex-none justify-center min-w-[120px]">
+                            <i class="fas fa-tools mr-2 text-xs"></i>
+                            <span>Tabela Assistências</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <br>
+
+        <!-- Filtros de Vendas - Estilo Colapsável -->
+        <div class="bg-white p-4 rounded-lg shadow mb-4">
+            <div class="flex justify-between items-center cursor-pointer" onclick="toggleFiltros('vendas')">
+                <h3 class="text-lg font-semibold">Filtros de Vendas</h3>
+                <div class="flex items-center space-x-2">
+                    <svg id="icon-filtro-vendas" class="w-5 h-5 transform transition-transform" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div id="painel-filtros-vendas" class="mt-4 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <!-- Filtro por Data -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                        <input type="date" id="filtro-data-vendas"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Filtro por Nome do Cliente -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente</label>
+                        <input type="text" id="filtro-nome-vendas" placeholder="Buscar por nome..."
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Filtro por Vendedor -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Vendedor</label>
+                        <select id="filtro-vendedor-vendas"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            <option value="">Todos os vendedores</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro de Status -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="filtro-status-vendas"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            <option value="pendente">Apenas Pendentes</option>
+                            <option value="concluido">Apenas Concluídos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+                    <div class="text-sm text-gray-600">
+                        <span id="texto-contador-vendas">Nenhum filtro aplicado</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="aplicarFiltrosVendas()"
+                            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition text-sm font-medium flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z">
+                                </path>
+                            </svg>
+                            Aplicar Filtros
+                        </button>
+                        <button onclick="limparFiltrosVendas()"
+                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition text-sm font-medium flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros Ativos -->
+                <div id="filtros-ativos-vendas" class="mt-3 hidden">
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <span>Filtros ativos:</span>
+                        <div id="tags-filtros-vendas" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Vendas -->
+        <div class="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow mt-4 sm:mt-6">
+            <h2 class="text-lg sm:text-xl font-semibold mb-4">Vendas Registradas</h2>
+
+            <!-- Container com rolagem horizontal e vertical -->
+            <div class="overflow-x-auto overflow-y-auto max-h-[70vh] border rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                    <!-- Cabeçalho fixo -->
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th
+                                class="px-2 py-2 sm:px-3 sm:py-3 text-left font-medium text-gray-500 uppercase whitespace-nowrap">
+                                Nome
+                                Cliente</th>
+                            <th
+                                class="px-2 py-2 sm:px-3 sm:py-3 text-left font-medium text-gray-500 uppercase whitespace-nowrap">
+                                Descrição</th>
+                            <th
+                                class="px-2 py-2 sm:px-3 sm:py-3 text-left font-medium text-gray-500 uppercase whitespace-nowrap">
+                                Pagamento</th>
+                            <th
+                                class="px-2 py-2 sm:px-3 sm:py-3 text-left font-medium text-gray-500 uppercase whitespace-nowrap">
+                                Valor
+                            </th>
+                            <th
+                                class="px-2 py-2 sm:px-3 sm:py-3 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">
+                                Custo</th>
+                            <th
+                                class="px-2 py-2 sm:px-3 sm:py-3 text-left font-medium text-gray-500 uppercase whitespace-nowrap hidden sm:table-cell">
+                                Vendedor</th>
+                            <th
+                                class="px-2 py-2 sm:px-3 sm:py-3 text-left font-medium text-gray-500 uppercase whitespace-nowrap">
+                                Status</th>
+                            <th>
+
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <!-- Corpo da tabela -->
+                    <tbody id="transactions-table" class="bg-white divide-y divide-gray-200">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Custo -->
+    <div id="modal-custo" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-xs mx-auto">
+            <h3 class="text-lg font-semibold mb-4">Adicionar Custo</h3>
+            <label for="input-custo" class="block text-sm mb-2">Informe o custo do produto:</label>
+            <input id="input-custo" type="number" class="w-full border px-3 py-2 rounded mb-4" placeholder="R$ 0,00" />
+            <div class="flex justify-end space-x-2">
+                <button onclick="fecharModalCusto()"
+                    class="px-4 py-2 rounded bg-yellow-200 text-yellow-800 border border-yellow-400 hover:bg-yellow-300 transition">
+                    Cancelar
+                </button>
+                <button onclick="salvarCusto()"
+                    class="px-4 py-2 rounded bg-green-200 text-green-800 border border-green-500 hover:bg-green-300 transition">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes Venda -->
+    <div id="modal-detalhes-venda"
+        class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-4 sm:p-6 rounded-lg w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-800">Detalhes da Venda</h3>
+                <button onclick="fecharModalDetalhesVenda()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    &times;
+                </button>
+            </div>
+            <div id="detalhes-venda-content" class="text-gray-700">
+                <!-- Conteúdo dinâmico -->
+            </div>
+            <div class="flex justify-end mt-6 pt-4 border-t">
+                <button onclick="fecharModalDetalhesVenda()"
+                    class="px-6 py-2 rounded bg-gray-300 hover:bg-gray-400 transition-colors">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="modal-editar"
+        class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
+        <div class="bg-white p-4 sm:p-6 rounded-lg w-full max-w-md mx-auto my-4">
+            <h3 class="text-lg font-semibold mb-4">Editar Venda</h3>
+
+            <div class="space-y-3 max-h-[calc(100vh-150px)] overflow-y-auto">
+                <div>
+                    <label class="block text-sm mb-1">Nome Cliente</label>
+                    <input id="edit-nome" type="text" class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-1">Telefone</label>
+                    <input id="edit-telefone" type="text" class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-1">Descrição</label>
+                    <input id="edit-descricao" type="text" class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-1">Valor Total</label>
+                    <input id="edit-valor" type="number" class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-1">Forma de Pagamento</label>
+                    <select id="edit-pagamento" class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                        <option value="cash">Dinheiro</option>
+                        <option value="card">Cartão</option>
+                        <option value="pix">Pix</option>
+                        <option value="voucher">Vale</option>
+                        <option value="cash_card">Dinheiro + Cartão</option>
+                        <option value="cash_pix">Dinheiro + Pix</option>
+                        <option value="card_pix">Cartão + Pix</option>
+                    </select>
+                </div>
+
+                <!-- Campos combinados -->
+                <div id="edit-payment-combo-fields" class="grid grid-cols-2 gap-2 hidden">
+                    <div>
+                        <label class="block text-sm mb-1" id="edit-payment-part1-label">Parte 1</label>
+                        <input id="edit-parte1" type="number"
+                            class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1" id="edit-payment-part2-label">Parte 2</label>
+                        <input id="edit-parte2" type="number"
+                            class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-1">Custo</label>
+                    <input id="edit-custo" type="number" class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-1">Vendedor</label>
+                    <select id="edit-vendedor" class="w-full border px-3 py-2 rounded text-sm sm:text-base"></select>
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-1">Garantia</label>
+                    <select id="edit-garantia" class="w-full border px-3 py-2 rounded text-sm sm:text-base">
+                        <option value="30">30 dias</option>
+                        <option value="60">60 dias</option>
+                        <option value="90">90 dias</option>
+                        <option value="365">1 ano</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 mt-4 pt-2 border-t">
+                <button onclick="fecharModalEditar()"
+                    class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-sm sm:text-base">Cancelar</button>
+                <button onclick="salvarEdicao()"
+                    class="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 text-sm sm:text-base">Salvar</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function checkDashboardAccess() {
+            const cargo = localStorage.getItem("userRole") || "Funcionario";
+
+            if (cargo !== "Gerente") {
+                alert("❌ Apenas gerentes podem acessar o Dashboard!");
+                return;
+            }
+
+            // Se for gerente, redireciona para o dashboard
+            window.location.href = "./dashboard.html";
+        }
+    </script>
+
+    <!-- No final do body, ANTES do fechamento -->
+    <script src="./pdf-generator.js"></script>
+    <script src="./vendas.js"></script>
+</body>
+
+
+</html>
