@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_file, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 import sqlite3
-import os 
+import os
 from functools import wraps
 
 app = Flask(__name__)
@@ -1290,8 +1290,49 @@ def obter_lucro_vendedores_periodo():
         import traceback
         print("Erro ao obter lucro por vendedor:", traceback.format_exc())
         return jsonify({"mensagem": f"Erro ao obter lucro por vendedor: {str(e)}"}), 500    
-    
+    # ================================================================================
+# ROTAS PARA SERVIR ARQUIVOS ESTÁTICOS - ADICIONE ISSO NO FINAL DO ARQUIVO
+# ================================================================================
+
+@app.route('/')
+def serve_index():
+    return send_file('index.html')
+
+@app.route('/login.html')
+def serve_login():
+    return send_file('login.html')
+
+@app.route('/dashboard.html')
+def serve_dashboard():
+    return send_file('dashboard.html')
+
+@app.route('/tbvendas.html')
+def serve_tbvendas():
+    return send_file('tbvendas.html')
+
+@app.route('/tbassistencia.html')
+def serve_tbassistencia():
+    return send_file('tbassistencia.html')
+
+@app.route('/tblogin.html')
+def serve_tblogin():
+    return send_file('tblogin.html')
+
+@app.route('/tbsaidas.html')
+def serve_tbsaidas():
+    return send_file('tbsaidas.html')
+
+# Rota genérica para outros arquivos (CSS, JS, etc)
+@app.route('/<path:filename>')
+def serve_static(filename):
+    if os.path.exists(filename):
+        return send_file(filename)
+    else:
+        return "Arquivo não encontrado", 404
+
+# ================================================================================
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
+
