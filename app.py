@@ -1,16 +1,16 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, render_template
 from flask_cors import CORS
 from datetime import datetime
 from functools import wraps
 import os
-import sqlite3
 import psycopg2
+import sqlite3  # Import adicionado
 from psycopg2.extras import RealDictCursor
 
 # ===================================
 # 🔹 CONFIGURAÇÃO INICIAL DO FLASK
 # ===================================
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.getenv("SECRET_KEY", "sua_chave_super_segura")
 CORS(app, supports_credentials=True)
 
@@ -20,8 +20,8 @@ CORS(app, supports_credentials=True)
 def get_connection():
     """
     Retorna uma conexão com o banco de dados:
-    - PostgreSQL se DATABASE_URL estiver definido
-    - SQLite local se não estiver (modo dev)
+    - PostgreSQL (Railway) se DATABASE_URL estiver configurada
+    - SQLite local se não estiver (modo desenvolvimento)
     """
     DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -39,7 +39,7 @@ def get_connection():
 
 
 # ===================================
-# 🔹 DECORADOR DE LOGIN
+#    DECORADOR DE LOGIN
 # ===================================
 def login_required(f):
     @wraps(f)
@@ -48,6 +48,33 @@ def login_required(f):
             return jsonify({"error": "Não autorizado"}), 401
         return f(*args, **kwargs)
     return decorated_function
+
+
+# ===================================
+#    ROTA PRINCIPAL
+# ===================================
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+# ===================================
+# 🔹 ROTA DE TESTE DE CONEXÃO
+# ===================================
+@app.route('/test_db')
+def test_db():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        if isinstance(conn, sqlite3.Connection):
+            cur.execute("SELECT datetime('now')")
+        else:
+            cur.execute("SELECT NOW();")
+        data = cur.fetchone()
+        conn.close()
+        return jsonify({"status": "ok", "timestamp": data})
+    except Exception as e:
+        return jsonify({"status": "erro", "mensagem": str(e)})
 
 
 # ===================================
@@ -237,5 +264,5 @@ def verificar_cargo():
 # 🔹 EXECUÇÃO DO SERVIDOR
 # ===================================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
