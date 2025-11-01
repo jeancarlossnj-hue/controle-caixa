@@ -5,14 +5,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard - TechStore Manager</title>
+
+    <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="style.css" />
+
+    <!-- ✅ CSS local (Flask) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+
     <!-- jsPDF -->
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
     <!-- html2canvas -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
+    <!-- ✅ Seus scripts locais -->
+    <script src="{{ url_for('static', filename='pdf-generator.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='dashboard.js') }}" defer></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -846,13 +857,13 @@
         </div>
 
 
-        <script src="./pdf-generator.js"></script>
-        <script src="./vendas.js"></script>
-        <script src="./vendedores.js"></script>
-        <script src="./assistencia.js"></script>
-        <script src="./novoscript.js"></script>
-        <script src="./login.js"></script>
-        <script src="./saidas.js"></script>
+        <script src="{{ url_for('static', filename='pdf-generator.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='vendas.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='vendedores.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='assistencia.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='novoscript.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='login.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='saidas.js') }}" defer></script>
 
 
 
