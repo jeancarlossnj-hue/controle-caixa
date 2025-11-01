@@ -37,6 +37,20 @@ def get_connection():
         conn.row_factory = sqlite3.Row
         return conn
 
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
+@app.route('/dashboard')
+def dashboard_page():
+    return render_template('dashboard.html')
+
+@app.route('/login.html')
+def login_html_redirect():
+    return render_template('login.html')
+
+
+
 
 # ===================================
 #    DECORADOR DE LOGIN
