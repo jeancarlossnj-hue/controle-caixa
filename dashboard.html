@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - TechStore Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <!-- Aplicação Principal -->
+    <div id="app">
+        <!-- Cabeçalho com Menu Responsivo -->
+        <header class="bg-white shadow-sm">
+            <div class="px-6 py-4">
+                <!-- Nome da loja centralizado -->
+                <div class="flex justify-center items-center mb-4">
+                    <i class="fas fa-store text-2xl text-blue-400 mr-3"></i>
+                    <span class="logo-text text-2xl font-bold text-gray-800">TechStore</span>
+                </div>
+
+                <!-- Botões de navegação - responsivos -->
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-3">
+                    <!-- Botão Voltar para Index -->
+                    <a href="index.html"
+                        class="inline-flex items-center px-4 py-2 rounded-md bg-gray-500 text-white hover:bg-gray-600 transition-colors text-sm shadow-sm hover:shadow w-full sm:w-auto justify-center">
+                        <i class="fas fa-arrow-left mr-2 text-xs"></i>
+                        <span>Voltar</span>
+                    </a>
+
+                    <!-- Botão Tabela de Vendas -->
+                    <a href="./tbvendas.html"
+                        class="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors text-sm shadow-sm hover:shadow w-full sm:w-auto justify-center">
+                        <i class="fas fa-table mr-2 text-xs"></i>
+                        <span>Tabela Vendas</span>
+                    </a>
+
+                    <!-- Botão Tabela de Assistências -->
+                    <a href="./tbassistencia.html"
+                        class="inline-flex items-center px-4 py-2 rounded-md bg-orange-600 text-white hover:bg-orange-700 transition-colors text-sm shadow-sm hover:shadow w-full sm:w-auto justify-center">
+                        <i class="fas fa-tools mr-2 text-xs"></i>
+                        <span>Tabela Assistências</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Conteúdo do Dashboard -->
+        <div id="dashboard-content" class="p-6 min-h-screen">
+            <!-- Filtros e Buscas Consolidados -->
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-100">
+                <!-- Cabeçalho centralizado -->
+                <div class="collapsible flex justify-center cursor-pointer mb-4" onclick="toggleFilters()">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filtros e Buscas
+                    </h3>
+                    <span id="filter-arrow" class="ml-2 transform transition-transform">▼</span>
+                </div>
+
+                <div id="filter-content" class="collapsible-content mt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Busca por Data Específica -->
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="text-md font-medium text-blue-800 mb-3 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Busca por Data Específica
+                            </h4>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="date-inicio" class="block text-sm font-medium text-gray-700 mb-1">Data
+                                        Início</label>
+                                    <div class="relative">
+                                        <input id="date-inicio" type="date"
+                                            class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="date-fim" class="block text-sm font-medium text-gray-700 mb-1">Data
+                                        Fim</label>
+                                    <div class="relative">
+                                        <input id="date-fim" type="date"
+                                            class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm">
+                                    </div>
+                                </div>
+
+                                <button id="btn-buscar-data" onclick="buscarPorDataEspecifica()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors shadow-sm hover:shadow-md flex items-center w-full justify-center mt-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    Buscar por Data
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filtro por Período -->
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="text-md font-medium text-green-800 mb-3 flex items-center">
+                                <i class="fas fa-filter mr-2"></i>
+                                Filtrar por Período
+                            </h4>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="select-periodo"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Selecionar
+                                        Período</label>
+                                    <select id="select-periodo"
+                                        class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                        <option value="hoje">Hoje</option>
+                                        <option value="semana">Esta semana</option>
+                                        <option value="mes">Este mês</option>
+                                        <option value="ano">Este ano</option>
+
+                                    </select>
+                                </div>
+                                <p class="text-sm text-green-500 mt-2">Apenas selecione o Período desejado.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-100">
+                <!-- Cabeçalho da Aba centralizado -->
+                <div class="collapsible flex justify-center cursor-pointer mb-4" onclick="toggleDashboardCards()">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-blue-500"></i>
+                        Resumo Bruto Vendas/Assistencias
+                    </h3>
+                    <span id="dashboard-cards-arrow" class="ml-2 transform transition-transform">▼</span>
+                </div>
+
+                <!-- Conteúdo colapsável ocupando toda a largura -->
+                <div id="dashboard-cards" class="overflow-hidden max-h-0 transition-all duration-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Cartão de Vendas (100% largura do grid) -->
+                        <div id="today-sales-card" class="bg-white p-6 rounded-lg shadow card-hover stats-card w-full"
+                            onclick="openModal('sales-modal')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Vendas</p>
+                                    <h3 class="text-2xl font-bold">R$ <span id="today-sales">0,00</span></h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-shopping-cart text-blue-600"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-blue-500 mt-2">Clique para mais detalhes</p>
+                        </div>
+
+                        <!-- Cartão de Assistências (100% largura do grid) -->
+                        <div id="today-services-card"
+                            class="bg-white p-6 rounded-lg shadow card-hover stats-card w-full"
+                            onclick="openModal('services-modal')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Assistências</p>
+                                    <h3 class="text-2xl font-bold">R$ <span id="today-services">0,00</span></h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="fas fa-tools text-green-600"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-green-500 mt-2">Clique para mais detalhes</p>
+                        </div>
+                        <!-- Cartão de Total Geral -->
+                        <div id="total-amount-card" class="bg-white p-6 rounded-lg shadow card-hover stats-card"
+                            onclick="openModal('total-modal')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Total Geral</p>
+                                    <h3 class="text-2xl font-bold">R$ <span id="total-amount">0,00</span></h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <i class="fas fa-wallet text-purple-600"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-green-500 mt-2"><i class="fas fa-arrow-up"></i> 8% desde ontem</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cartões de Lucro -->
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-100">
+                <!-- Cabeçalho da Aba centralizado -->
+                <div class="collapsible flex justify-center cursor-pointer mb-4" onclick="toggleLucroCards()">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                        Resumo de Lucros Vendas/Assistencias
+                    </h3>
+                    <span id="lucro-cards-arrow" class="ml-2 transform transition-transform">▼</span>
+                </div>
+
+                <!-- Conteúdo colapsável ocupando toda a largura -->
+                <div id="lucro-cards" class="overflow-hidden max-h-0 transition-all duration-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Cartão de Lucro de Vendas -->
+                        <div id="lucro-vendas-card" class="bg-white p-6 rounded-lg shadow card-hover stats-card w-full"
+                            onclick="openModal('lucro-vendas-modal')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Lucro Vendas</p>
+                                    <h3 class="text-2xl font-bold">R$ <span id="lucro-vendas">0,00</span></h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="fas fa-money-bill-wave text-green-600"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-green-500 mt-2">Clique para mais detalhes</p>
+                        </div>
+
+                        <!-- Cartão de Lucro de Assistências -->
+                        <div id="lucro-assistencias-card"
+                            class="bg-white p-6 rounded-lg shadow card-hover stats-card w-full"
+                            onclick="openModal('lucro-assistencias-modal')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Lucro Assistências</p>
+                                    <h3 class="text-2xl font-bold">R$ <span id="lucro-assistencias">0,00</span></h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-tools text-blue-600"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-blue-500 mt-2">Clique para mais detalhes</p>
+                        </div>
+
+                        <!-- Cartão de Lucro Total -->
+                        <div id="lucro-total-card" class="bg-white p-6 rounded-lg shadow card-hover stats-card"
+                            onclick="openModal('lucro-total-modal')">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Lucro Total</p>
+                                    <h3 class="text-2xl font-bold">R$ <span id="lucro-total">0,00</span></h3>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-purple-600"></i>
+                                </div>
+                            </div>
+                            <p class="text-sm text-green-500 mt-2">Soma de vendas e assistências</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Novos Cartões Adicionados -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Cartão de Saídas -->
+                <div id="today-expenses-card" class="bg-white p-6 rounded-lg shadow card-hover stats-card"
+                    onclick="openModal('expenses-modal')">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Saídas</p>
+                            <h3 class="text-2xl font-bold">R$ <span id="today-expenses">0.00</span></h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                            <i class="fas fa-money-bill-wave text-red-600"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-red-500 mt-2">Clique para mais detalhes</p>
+                </div>
+
+
+                <!-- Cartão de Pendentes -->
+                <div id="pending-sales-card" class="bg-white p-6 rounded-lg shadow card-hover stats-card"
+                    onclick="openModal('pending-sales-modal')">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Pendentes</p>
+                            <h3 class="text-2xl font-bold">vendas/Assistencias</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-600"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-yellow-500 mt-2"><i class="fas fa-arrow-up"></i> Clique para Mais Detalhes
+                    </p>
+                </div>
+
+                <!-- Cartão de Resumo de Vendedores -->
+                <div id="sellers-summary-card" class="bg-white p-6 rounded-lg shadow card-hover stats-card"
+                    onclick="openModal('sellers-summary-modal')">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Resumo de Vendedores</p>
+                            <h3 class="text-2xl font-bold"><span id="sellers-count">0</span> funcionarios</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
+                            <i class="fas fa-user-tie text-pink-600"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-green-500 mt-2"><i class="fas fa-arrow-up"></i>Clique para mais detalhes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes de Vendas - Atualizado -->
+    <div id="sales-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Detalhes das Vendas Concluídas</h3>
+                <button onclick="closeModal('sales-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium" id="modal-periodo">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">Dinheiro</span>
+                        <div class="progress-bar">
+                            <div id="modal-dinheiro-bar" class="progress-fill bg-blue-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <span id="modal-dinheiro-valor" class="font-medium text-blue-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">Cartão</span>
+                        <div class="progress-bar">
+                            <div id="modal-cartao-bar" class="progress-fill bg-green-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <span id="modal-cartao-valor" class="font-medium text-green-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">PIX</span>
+                        <div class="progress-bar">
+                            <div id="modal-pix-bar" class="progress-fill bg-yellow-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <span id="modal-pix-valor" class="font-medium text-yellow-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">Vale</span>
+                        <div class="progress-bar">
+                            <div id="modal-vale-bar" class="progress-fill bg-red-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <span id="modal-vale-valor" class="font-medium text-red-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method payment-total">
+                    <span class="font-medium text-gray-700">Total Vendas Concluídas</span>
+                    <span id="modal-total-valor" class="font-bold text-gray-800">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('sales-modal')"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal de Detalhes de Assistências - Atualizado -->
+    <div id="services-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-green-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Detalhes das Assistências Concluídas</h3>
+                <button onclick="closeModal('services-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium" id="modal-periodo-assistencias">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">Dinheiro</span>
+                        <div class="progress-bar">
+                            <div id="modal-assistencia-dinheiro-bar" class="progress-fill bg-green-500"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <span id="modal-assistencia-dinheiro-valor" class="font-medium text-green-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">Cartão</span>
+                        <div class="progress-bar">
+                            <div id="modal-assistencia-cartao-bar" class="progress-fill bg-green-600" style="width: 0%">
+                            </div>
+                        </div>
+                    </div>
+                    <span id="modal-assistencia-cartao-valor" class="font-medium text-green-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">PIX</span>
+                        <div class="progress-bar">
+                            <div id="modal-assistencia-pix-bar" class="progress-fill bg-green-300" style="width: 0%">
+                            </div>
+                        </div>
+                    </div>
+                    <span id="modal-assistencia-pix-valor" class="font-medium text-green-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <div>
+                        <span class="font-medium text-gray-700">Vale</span>
+                        <div class="progress-bar">
+                            <div id="modal-assistencia-vale-bar" class="progress-fill bg-green-700" style="width: 0%">
+                            </div>
+                        </div>
+                    </div>
+                    <span id="modal-assistencia-vale-valor" class="font-medium text-green-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method payment-total">
+                    <span class="font-medium text-gray-700">Total Assistências Concluídas</span>
+                    <span id="modal-assistencia-total-valor" class="font-bold text-gray-800">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('services-modal')"
+                    class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes de Saídas -->
+    <div id="expenses-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-red-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Detalhes das Saídas</h3>
+                <button onclick="closeModal('expenses-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('expenses-modal')"
+                    class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pendentes -->
+    <div id="pending-sales-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-yellow-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Pendentes (Vendas e Assistências)</h3>
+                <button onclick="closeModal('pending-sales-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium" id="modal-periodo-pendentes">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="payment-method" id="vendas-pendentes-container">
+                    <span class="font-medium text-gray-700">Vendas Pendentes</span>
+                    <span id="modal-vendas-pendentes-qtd" class="font-medium text-blue-600">0</span>
+                </div>
+                <p class="text-sm text-gray-500">valores:
+                    <span id="modal-vendas-pendentes-valor" class="font-medium text-gray-800">R$ 0,00</span>
+                </p>
+
+                <div class="payment-method mt-4" id="assistencias-pendentes-container">
+                    <span class="font-medium text-gray-700">Assistências Pendentes</span>
+                    <span id="modal-assistencias-pendentes-qtd" class="font-medium text-green-600">0</span>
+                </div>
+                <p class="text-sm text-gray-500">valores:
+                    <span id="modal-assistencias-pendentes-valor" class="font-medium text-gray-800">R$ 0,00</span>
+                </p>
+
+                <div class="payment-method payment-total mt-6">
+                    <span class="font-medium text-gray-700">Total Pendentes</span>
+                    <span id="modal-total-pendentes" class="font-bold text-gray-800">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('pending-sales-modal')"
+                    class="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal de Resumo de Vendedores -->
+    <div id="sellers-summary-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-pink-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Resumo de Vendedores</h3>
+                <button onclick="closeModal('sellers-summary-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('sellers-summary-modal')"
+                    class="bg-pink-600 hover:bg-pink-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes de Lucro de Vendas -->
+    <div id="lucro-vendas-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-green-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Detalhes do Lucro de Vendas</h3>
+                <button onclick="closeModal('lucro-vendas-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium" id="modal-periodo-lucro-vendas">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="payment-method">
+                    <span class="font-medium text-gray-700">Total de Vendas</span>
+                    <span id="modal-total-vendas-lucro" class="font-medium text-blue-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <span class="font-medium text-gray-700">Total de Custos</span>
+                    <span id="modal-total-custo-vendas" class="font-medium text-red-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method payment-total">
+                    <span class="font-medium text-gray-700">Lucro Total</span>
+                    <span id="modal-lucro-total-vendas" class="font-bold text-green-600">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('lucro-vendas-modal')"
+                    class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes de Lucro de Assistências -->
+    <div id="lucro-assistencias-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Detalhes do Lucro de Assistências</h3>
+                <button onclick="closeModal('lucro-assistencias-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium" id="modal-periodo-lucro-assistencias">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="payment-method">
+                    <span class="font-medium text-gray-700">Total de Serviços</span>
+                    <span id="modal-total-servicos-lucro" class="font-medium text-blue-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <span class="font-medium text-gray-700">Total de Custos</span>
+                    <span id="modal-total-custo-assistencias" class="font-medium text-red-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method payment-total">
+                    <span class="font-medium text-gray-700">Lucro Total</span>
+                    <span id="modal-lucro-total-assistencias" class="font-bold text-green-600">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('lucro-assistencias-modal')"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes de Lucro Total -->
+    <div id="lucro-total-modal" class="modal">
+        <div class="modal-content">
+            <div class="bg-purple-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Detalhes do Lucro Total</h3>
+                <button onclick="closeModal('lucro-total-modal')" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Período:</span>
+                    <span class="font-medium" id="modal-periodo-lucro-total">Carregando...</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="payment-method">
+                    <span class="font-medium text-gray-700">Lucro de Vendas</span>
+                    <span id="modal-lucro-vendas-total" class="font-medium text-green-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method">
+                    <span class="font-medium text-gray-700">Lucro de Assistências</span>
+                    <span id="modal-lucro-assistencias-total" class="font-medium text-blue-600">R$ 0,00</span>
+                </div>
+
+                <div class="payment-method payment-total">
+                    <span class="font-medium text-gray-700">Lucro Total</span>
+                    <span id="modal-lucro-total-geral" class="font-bold text-purple-600">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-b-lg flex justify-end">
+                <button onclick="closeModal('lucro-total-modal')"
+                    class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>
