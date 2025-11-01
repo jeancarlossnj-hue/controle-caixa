@@ -50,6 +50,45 @@ def login_html_redirect():
     return render_template('login.html')
 
 
+# Página inicial
+@app.route('/')
+@app.route('/index')
+@app.route('/index.html')
+def index_page():
+    return render_template('index.html')
+
+# Página de login
+@app.route('/login')
+@app.route('/login.html')
+def login_page():
+    return render_template('login.html')
+
+# Página do dashboard
+@app.route('/dashboard')
+@app.route('/dashboard.html')
+def dashboard_page():
+    return render_template('dashboard.html')
+
+# Tabelas e telas secundárias
+@app.route('/tbassistencia')
+@app.route('/tbassistencia.html')
+def tbassistencia_page():
+    return render_template('tbassistencia.html')
+
+@app.route('/tbvendas')
+@app.route('/tbvendas.html')
+def tbvendas_page():
+    return render_template('tbvendas.html')
+
+@app.route('/tbsaidas')
+@app.route('/tbsaidas.html')
+def tbsaidas_page():
+    return render_template('tbsaidas.html')
+
+@app.route('/tblogin')
+@app.route('/tblogin.html')
+def tblogin_page():
+    return render_template('tblogin.html')
 
 
 # ===================================
