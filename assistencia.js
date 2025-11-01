@@ -274,7 +274,7 @@ async function salvarAssistenciaNoBanco(dadosAssistencia) {
     try {
         console.log("📤 Enviando dados COMPLETOS para API...", dadosAssistencia);
 
-        const response = await fetch('http://127.0.0.1:5000/api/assistencias', {
+        const response = await apiFetch('/api/assistencias', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dadosAssistencia)
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //  CARREGAR ASSISTÊNCIAS - ATUALIZADA
 // ============================
 function carregarAssistencias() {
-    fetch('http://127.0.0.1:5000/obter_assistencias')
+    apiFetch('/obter_assistencias')
         .then(response => response.json())
         .then(assistencias => {
             // ATUALIZAÇÃO: Preencher a variável global para os filtros
@@ -899,7 +899,7 @@ function salvarCustoAssistencia() {
         return;
     }
 
-    fetch(`http://127.0.0.1:5000/atualizar_custo_assistencia/${assistenciaIdAtual}`, {
+    apiFetch(`/atualizar_custo_assistencia/${assistenciaIdAtual}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1186,7 +1186,7 @@ function salvarEdicaoAssistencia() {
 
     console.log("Enviando dados para edição:", dados);
 
-    fetch(`http://127.0.0.1:5000/editar_assistencia/${assistenciaIdEditando}`, {
+    apiFetch(`/editar_assistencia/${assistenciaIdEditando}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
@@ -1220,7 +1220,7 @@ function fecharModalEditarAssistencia() {
 //  BUSCAR DETALHES ASSISTÊNCIA PARA EDIÇÃO (CORRETA)
 // ============================
 function buscarDetalhesAssistenciaParaEdicao(idAssistencia) {
-    fetch('http://127.0.0.1:5000/obter_assistencias')
+    apiFetch('/obter_assistencias')
         .then(response => response.json())
         .then(assistencias => {
             const assistencia = assistencias.find(a => a.id === idAssistencia);
@@ -1265,7 +1265,7 @@ function confirmarExclusaoAssistencia(idAssistencia) {
     }
     if (!confirm("Tem certeza que deseja excluir esta assistência?")) return;
 
-    fetch(`http://127.0.0.1:5000/excluir_assistencia/${idAssistencia}`, {
+    apiFetch(`/excluir_assistencia/${idAssistencia}`, {
         method: 'DELETE'
     })
         .then(res => res.json())
@@ -1314,7 +1314,7 @@ function traduzirChecklist(chave) {
 // ============================
 async function carregarVendedores() {
     try {
-        const response = await fetch('http://127.0.0.1:5000/obter_vendedores');
+        const response = await apiFetch('/obter_vendedores');
         const vendedores = await response.json();
         listaVendedores = vendedores; // ATRIBUINDO À VARIÁVEL GLOBAL EXISTENTE
         return vendedores;

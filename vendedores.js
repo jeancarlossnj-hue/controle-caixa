@@ -8,7 +8,7 @@
     async function carregarVendedores() {
         try {
         
-            const response = await fetch('http://127.0.0.1:5000/obter_vendedores');
+            const response = await apiFetch('/obter_vendedores');
             
             if (!response.ok) {
                 throw new Error('Erro ao carregar vendedores');

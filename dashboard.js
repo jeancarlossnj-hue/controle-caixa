@@ -1,11 +1,10 @@
 // dashboard.js (consolidado e corrigido)
 // --------------------------------
 // Regras:
-// - API base assumida: http://127.0.0.1:5000 (mesmo host/porta do app.py)
+// - API base determinada dinamicamente (ver api-config.js)
 // - Formatações em pt-BR
 // - Atualiza todos os modais listados no dashboard.html
 
-const API = 'http://127.0.0.1:5000';
 let filtroAtual = { tipo: 'hoje', dataInicio: null, dataFim: null };
 
 // Função para obter data no formato YYYY-MM-DD - CORRIGIDA
@@ -360,12 +359,12 @@ async function carregarDadosDashboard(dataInicio, dataFim) {
         console.log(`Carregando dados dashboard: ${dataInicio} à ${dataFim}`);
 
         // vendas
-        const vendasRes = await fetch(`${API}/obter_resumo_vendas_concluidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const vendasRes = await apiFetch(`/obter_resumo_vendas_concluidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const dadosVendas = await (vendasRes.ok ? vendasRes.json() : { total_geral: 0 });
         console.log('Dados vendas:', dadosVendas);
 
         // assistencias
-        const assistRes = await fetch(`${API}/obter_resumo_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const assistRes = await apiFetch(`/obter_resumo_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const dadosAssist = await (assistRes.ok ? assistRes.json() : {
             total_geral: 0,
             total_dinheiro: 0,
@@ -376,7 +375,7 @@ async function carregarDadosDashboard(dataInicio, dataFim) {
         console.log('Dados assistências:', dadosAssist);
 
         // saídas
-        const saidasRes = await fetch(`${API}/obter_resumo_saidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const saidasRes = await apiFetch(`/obter_resumo_saidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const dadosSaidas = await (saidasRes.ok ? saidasRes.json() : { total: 0 });
         console.log('Dados saídas:', dadosSaidas);
 
@@ -414,11 +413,11 @@ async function carregarDadosLucro(dataInicio, dataFim) {
     try {
         console.log(`Carregando dados lucro: ${dataInicio} à ${dataFim}`);
 
-        const vendasRes = await fetch(`${API}/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const vendasRes = await apiFetch(`/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const vendas = vendasRes.ok ? await vendasRes.json() : { lucro_total: 0, total_vendas: 0, total_custo: 0 };
         console.log('Lucro vendas:', vendas);
 
-        const assistRes = await fetch(`${API}/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const assistRes = await apiFetch(`/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const assists = assistRes.ok ? await assistRes.json() : { lucro_total: 0, total_servicos: 0, total_custo: 0 };
         console.log('Lucro assistências:', assists);
 
@@ -441,7 +440,7 @@ async function carregarDadosLucro(dataInicio, dataFim) {
 /* ---- Modal VENDAS ---- */
 async function carregarModalVendas(dataInicio, dataFim) {
     try {
-        const res = await fetch(`${API}/obter_resumo_vendas_concluidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const res = await apiFetch(`/obter_resumo_vendas_concluidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         if (!res.ok) throw new Error('Erro ao obter resumo de vendas');
         const dados = await res.json();
 
@@ -476,7 +475,7 @@ async function carregarModalVendas(dataInicio, dataFim) {
 /* ---- Modal ASSISTÊNCIAS ---- */
 async function carregarModalAssistencias(dataInicio, dataFim) {
     try {
-        const res = await fetch(`${API}/obter_resumo_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const res = await apiFetch(`/obter_resumo_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         if (!res.ok) throw new Error('Erro ao obter resumo de assistências');
         const dados = await res.json();
 
@@ -511,10 +510,10 @@ async function carregarModalAssistencias(dataInicio, dataFim) {
 /* ---- Modal PENDENTES ---- */
 async function carregarModalPendentes(dataInicio, dataFim) {
     try {
-        const vendasRes = await fetch(`${API}/obter_resumo_vendas_pendentes_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const vendasRes = await apiFetch(`/obter_resumo_vendas_pendentes_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const vendas = vendasRes.ok ? await vendasRes.json() : { quantidade: 0, total_geral: 0 };
 
-        const assistRes = await fetch(`${API}/obter_resumo_assistencias_pendentes_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const assistRes = await apiFetch(`/obter_resumo_assistencias_pendentes_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const assists = assistRes.ok ? await assistRes.json() : { quantidade: 0, total_geral: 0 };
 
         document.getElementById('modal-periodo-pendentes') && (document.getElementById('modal-periodo-pendentes').textContent = `${formatarDataLong(dataInicio)} à ${formatarDataLong(dataFim)}`);
@@ -536,7 +535,7 @@ async function carregarModalPendentes(dataInicio, dataFim) {
 async function carregarModalSaidas(dataInicio, dataFim) {
     try {
         // obter lista completa de saídas e filtrar por período (endpoint: /api/saidas)
-        const listRes = await fetch(`${API}/api/saidas`);
+        const listRes = await apiFetch(`/api/saidas`);
         const todas = listRes.ok ? await listRes.json() : [];
 
         // filtrar por data (data no formato ISO ou YYYY-MM-DD)
@@ -606,10 +605,10 @@ async function carregarModalSaidas(dataInicio, dataFim) {
 /* ---- Modais LUCROS ---- */
 async function carregarDadosLucro(dataInicio, dataFim) {
     try {
-        const vendasRes = await fetch(`${API}/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const vendasRes = await apiFetch(`/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const vendas = vendasRes.ok ? await vendasRes.json() : { lucro_total: 0, total_vendas: 0, total_custo: 0 };
 
-        const assistRes = await fetch(`${API}/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const assistRes = await apiFetch(`/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const assists = assistRes.ok ? await assistRes.json() : { lucro_total: 0, total_servicos: 0, total_custo: 0 };
 
         // cards de lucro
@@ -627,7 +626,7 @@ async function carregarDadosLucro(dataInicio, dataFim) {
 
 async function carregarModalLucroVendas(dataInicio, dataFim) {
     try {
-        const res = await fetch(`${API}/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const res = await apiFetch(`/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         if (!res.ok) throw new Error('Erro obter lucro vendas');
         const dados = await res.json();
 
@@ -642,7 +641,7 @@ async function carregarModalLucroVendas(dataInicio, dataFim) {
 
 async function carregarModalLucroAssistencias(dataInicio, dataFim) {
     try {
-        const res = await fetch(`${API}/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const res = await apiFetch(`/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         if (!res.ok) throw new Error('Erro obter lucro assistencias');
         const dados = await res.json();
 
@@ -657,10 +656,10 @@ async function carregarModalLucroAssistencias(dataInicio, dataFim) {
 
 async function carregarModalLucroTotal(dataInicio, dataFim) {
     try {
-        const vendasRes = await fetch(`${API}/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const vendasRes = await apiFetch(`/obter_lucro_vendas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const vendas = vendasRes.ok ? await vendasRes.json() : { lucro_total: 0 };
 
-        const assistRes = await fetch(`${API}/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const assistRes = await apiFetch(`/obter_lucro_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const assists = assistRes.ok ? await assistRes.json() : { lucro_total: 0 };
 
         document.getElementById('modal-periodo-lucro-total') && (document.getElementById('modal-periodo-lucro-total').textContent = `${formatarDataLong(dataInicio)} à ${formatarDataLong(dataFim)}`);
@@ -676,10 +675,10 @@ async function carregarModalLucroTotal(dataInicio, dataFim) {
 async function carregarModalTotal(dataInicio, dataFim) {
     try {
         // Reaproveita endpoints de vendas/assistências para montar o total detalhado
-        const vendasRes = await fetch(`${API}/obter_resumo_vendas_concluidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const vendasRes = await apiFetch(`/obter_resumo_vendas_concluidas_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const vendas = vendasRes.ok ? await vendasRes.json() : { total_geral: 0 };
 
-        const assistRes = await fetch(`${API}/obter_resumo_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const assistRes = await apiFetch(`/obter_resumo_assistencias_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         const assists = assistRes.ok ? await assistRes.json() : { total_geral: 0 };
 
         // Atualizar modal (tem ids: modal-periodo? para vendas já usamos; para total usamos => id 'modal-periodo-lucro-total' ou 'modal-periodo' dependendo do modal)
@@ -701,7 +700,7 @@ async function carregarModalTotal(dataInicio, dataFim) {
 /* ---- Modal RESUMO DE VENDEDORES ---- */
 async function carregarModalVendedores(dataInicio, dataFim) {
     try {
-        const res = await fetch(`${API}/obter_lucro_vendedores_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
+        const res = await apiFetch(`/obter_lucro_vendedores_periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`);
         if (!res.ok) throw new Error('Erro ao obter resumo de vendedores');
         const vendedores = await res.json();
 

@@ -846,6 +846,7 @@
         </div>
 
 
+        <script src="./api-config.js"></script>
         <script src="./pdf-generator.js"></script>
         <script src="./vendas.js"></script>
         <script src="./vendedores.js"></script>
@@ -878,7 +879,7 @@
             });
 
             function logout() {
-                fetch("http://127.0.0.1:5000/logout", {
+                apiFetch('/logout', {
                     method: "POST",
                     credentials: "include"
                 }).then(() => {

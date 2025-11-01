@@ -3,7 +3,7 @@
 // Controle de Saídas com integração Flask
 // ===========================================
 
-const API_URL = "http://127.0.0.1:5000/api/saidas";
+const API_URL = apiUrl('/api/saidas');
 
 // Variável para controle de envio
 let saidaSendoEnviada = false;
@@ -137,7 +137,7 @@ function excluirSaida(id) {
 
 // Função para carregar funcionários da tabela de login
 function carregarFuncionarios() {
-    fetch('http://127.0.0.1:5000/obter_logins')
+    apiFetch('/obter_logins')
         .then(res => res.json())
         .then(usuarios => {
             const selectFuncionario = document.getElementById('expense-employee');

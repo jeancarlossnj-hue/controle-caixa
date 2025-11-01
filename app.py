@@ -1,13 +1,58 @@
-from flask import Flask, request, jsonify, session, send_file, send_from_directory
+from flask import Flask, request, jsonify, session, send_file
 from flask_cors import CORS
 from datetime import datetime
-import sqlite3
 import os
 from functools import wraps
+from decimal import Decimal
+
+import psycopg2
+from psycopg2 import extensions
+
 
 app = Flask(__name__)
 app.secret_key = "sua_chave_super_segura"  # troque por algo forte
 CORS(app, supports_credentials=True)
+
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is not set. Configure it with the PostgreSQL connection string."
+    )
+
+
+def _normalize_query(query: str) -> str:
+    if not isinstance(query, str):
+        return query
+
+    normalized = query.replace("IFNULL", "COALESCE").replace("ifnull", "COALESCE")
+    return normalized.replace("?", "%s")
+
+
+class NormalizedCursor(extensions.cursor):
+    def execute(self, query, vars=None):
+        query = _normalize_query(query)
+        return super().execute(query, vars)
+
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=NormalizedCursor)
+
+
+def _serialize_decimal(value):
+    return float(value) if isinstance(value, Decimal) else value
+
+
+def _serialize_datetime(value):
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return value
+
+
+def _decimal_or_default(value, default=0):
+    if value is None:
+        return default
+    return _serialize_decimal(value)
 
 # Rota para login com senha padrão (fallback)
 @app.route("/login_default", methods=["POST"])
@@ -52,7 +97,7 @@ def registrar_venda():
     
     try:
         data = request.get_json()
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Obter o nome do vendedor da sessão ou dos dados da requisição
@@ -61,7 +106,7 @@ def registrar_venda():
             nome_vendedor = session['username']
 
         # SEMPRE usar data e hora atual (não confiar no frontend)
-        data_venda = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        data_venda = datetime.now()
         print(f"Registrando venda com data: {data_venda}")  # Para debug
 
         cursor.execute('''
@@ -111,7 +156,7 @@ def atualizar_custo(id):
         if custo is None:
             return jsonify({"mensagem": "Custo não informado"}), 400
 
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE vendas SET custo_produto = ? WHERE id = ?", (custo, id))
         conn.commit()
@@ -125,18 +170,10 @@ def atualizar_custo(id):
 @app.route('/obter_vendas', methods=['GET'])
 def obter_vendas():
     try:
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Primeiro, vamos verificar a estrutura da tabela
-        cursor.execute("PRAGMA table_info(vendas)")
-        colunas = cursor.fetchall()
-        print("=== ESTRUTURA DA TABELA VENDAS ===")
-        for coluna in colunas:
-            print(f"Coluna: {coluna[1]}, Tipo: {coluna[2]}")
-        print("=================================")
-        
-        # Agora busque os dados com um SELECT mais explícito
+        # Buscar os dados com um SELECT mais explícito
         cursor.execute("""
         SELECT 
             id, 
@@ -161,10 +198,10 @@ def obter_vendas():
                 "telefone_cliente": row[2],
                 "descricao_produto": row[3],
                 "forma_pagamento": row[4],
-                "valor_total": row[5],
-                "custo_produto": row[6],
+                "valor_total": _serialize_decimal(row[5]),
+                "custo_produto": _serialize_decimal(row[6]),
                 "nome_vendedor": row[7],
-                "data_venda": row[8],  # Pode ser None
+                "data_venda": _serialize_datetime(row[8]),  # Pode ser None
                 "garantia": row[9]
             }
             print(f"Venda {venda['id']}: data_venda = {venda['data_venda']} (tipo: {type(venda['data_venda'])})")
@@ -183,7 +220,7 @@ def obter_vendas():
 def editar_venda(id):
     try:
         data = request.get_json()
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -226,7 +263,7 @@ def editar_venda(id):
 @app.route('/excluir_venda/<int:id>', methods=['DELETE'])
 def excluir_venda(id):
     try:
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM vendas WHERE id = ?", (id,))
         conn.commit()
@@ -240,11 +277,17 @@ def excluir_venda(id):
 # Função para cadastrar um novo usuário 
 def cadastrar_usuario(registro_usuario, registro_senha, registro_funcao):
     try:
-        with sqlite3.connect('sistema_seguranca.db', timeout=10) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
 
             # Verificando se a tabela existe
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios';")
+            cursor.execute(
+                """
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'usuarios'
+                """
+            )
             if cursor.fetchone() is None:
                 print("A tabela 'usuarios' não existe!")
             else:
@@ -274,7 +317,7 @@ def registrar():
     registro_funcao = data['registro_funcao']
 
     try:
-        with sqlite3.connect('sistema_seguranca.db', timeout=10) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM usuarios WHERE nome_usuario = ?', (registro_usuario,))
             usuario_existente = cursor.fetchone()
@@ -293,7 +336,7 @@ def registrar():
 @app.route("/obter_logins", methods=["GET"])
 def obter_logins():
     try:
-        with sqlite3.connect('sistema_seguranca.db', timeout=10) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id, nome_usuario, senha, funcao FROM usuarios")
 
@@ -312,7 +355,7 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    conn = sqlite3.connect('sistema_seguranca.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, nome_usuario FROM usuarios WHERE nome_usuario = ? AND senha = ?", (username, password))
     user = cursor.fetchone()
@@ -333,7 +376,7 @@ def verificar_cargo():
         if "username" not in session:
             return jsonify({"success": False, "mensagem": "Usuário não autenticado"}), 401
 
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT funcao FROM usuarios WHERE nome_usuario = ?", (session["username"],))
         resultado = cursor.fetchone()
@@ -367,7 +410,7 @@ def editar_usuarios(id):
 
         print(f"[DEBUG] Atualizando usuário {id} com: {nome_usuario}, {senha}, {funcao}")
 
-        with sqlite3.connect('sistema_seguranca.db', timeout=10) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE usuarios
@@ -388,7 +431,7 @@ def editar_usuarios(id):
 @app.route('/usuarios/<int:id>', methods=['DELETE'])
 def deletar_usuario(id):
     try:
-        with sqlite3.connect('sistema_seguranca.db', timeout=10) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM usuarios WHERE id = ?", (id,))
             usuario = cursor.fetchone()
@@ -405,16 +448,6 @@ def deletar_usuario(id):
         import traceback
         traceback.print_exc()
         return jsonify({"message": "Erro ao excluir usuário."}), 500
-
-# -----------------------------------------------
-
-# Configuração do banco de dados
-DATABASE = 'sistema_seguranca.db'
-
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 # --- ADICIONAR ASSISTÊNCIA ---
 @app.route('/api/assistencias', methods=['POST'])
@@ -437,7 +470,7 @@ def adicionar_assistencia():
             nome_vendedor = session['username']
 
         # --- 3️⃣ SEMPRE usar data e hora atual do servidor ---
-        data_cadastro = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        data_cadastro = datetime.now()
         print(f"=== REGISTRANDO NOVA ASSISTÊNCIA ===")
         print(f"Data/hora: {data_cadastro}")
         print(f"Cliente: {dados['nome_cliente']}")
@@ -489,6 +522,7 @@ def adicionar_assistencia():
             outra_assistencia, gaveta_sim, com_capinha, data_cadastro,
             id_funcionario, status, nome_vendedor
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        RETURNING id
         """
 
         checklist = dados.get('checklist', {})
@@ -525,9 +559,8 @@ def adicionar_assistencia():
         )
 
         cursor.execute(query, valores)
+        id_assistencia = cursor.fetchone()[0]
         conn.commit()
-
-        id_assistencia = cursor.lastrowid
         print(f"Nova assistência inserida com ID: {id_assistencia}")
         
         return jsonify({
@@ -549,16 +582,8 @@ def adicionar_assistencia():
 @app.route('/obter_assistencias', methods=['GET'])
 def obter_assistencias():
     try:
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # Primeiro, verifique a estrutura da tabela
-        cursor.execute("PRAGMA table_info(assistencias)")
-        colunas = cursor.fetchall()
-        print("=== ESTRUTURA DA TABELA ASSISTENCIAS ===")
-        for coluna in colunas:
-            print(f"Coluna: {coluna[1]}, Tipo: {coluna[2]}")
-        print("=================================")
         
         cursor.execute("""
             SELECT id, nome_cliente, telefone_cliente, marca_aparelho, modelo_aparelho,
@@ -586,12 +611,12 @@ def obter_assistencias():
                 "descricao_defeito": row[5],
                 "servico_realizar": row[6],
                 "forma_pagamento": row[7],
-                "valor_servico": row[8],
-                "valor_dinheiro": row[9],
-                "valor_cartao": row[10],
-                "valor_pix": row[11],
-                "valor_vale": row[12],
-                "custo_servico": row[13],
+                "valor_servico": _serialize_decimal(row[8]),
+                "valor_dinheiro": _serialize_decimal(row[9]),
+                "valor_cartao": _serialize_decimal(row[10]),
+                "valor_pix": _serialize_decimal(row[11]),
+                "valor_vale": _serialize_decimal(row[12]),
+                "custo_servico": _serialize_decimal(row[13]),
                 "status": row[14],
                 "periodo_garantia": row[15],
                 "checklist": {
@@ -607,7 +632,7 @@ def obter_assistencias():
                     "gaveta_sim": row[25],
                     "com_capinha": row[26]
                 },
-                "data_cadastro": row[27],
+                "data_cadastro": _serialize_datetime(row[27]),
                 "nome_vendedor": row[28]
             }
             print(f"Assistência {assistencia['id']}: data_cadastro = {assistencia['data_cadastro']}")
@@ -626,7 +651,7 @@ def obter_assistencias():
 def editar_assistencia(id):
     try:
         data = request.get_json()
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -685,7 +710,7 @@ def atualizar_custo_assistencia(id):
         if custo_servico is None:
             return jsonify({"mensagem": "Custo não informado"}), 400
 
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -724,29 +749,22 @@ def excluir_assistencia(id):
     except Exception as e:
         return jsonify({"mensagem": f"Erro ao excluir assistência: {e}"}), 500
 
-# Nome do banco
-DB_NAME = "sistema_seguranca.db"
-
-# Conexão com o banco
-def get_db_connection():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
-
 # Criar tabela de saídas
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('''
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS saidas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             motivo TEXT NOT NULL,
-            valor REAL NOT NULL,
-            data TEXT NOT NULL,
+            valor NUMERIC NOT NULL,
+            data DATE NOT NULL,
             funcionario TEXT NOT NULL,
             data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
+        """
+    )
     conn.commit()
     conn.close()
 
@@ -758,10 +776,22 @@ init_db()
 def listar_saidas():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM saidas ORDER BY data DESC")
+    cursor.execute("SELECT id, motivo, valor, data, funcionario, data_registro FROM saidas ORDER BY data DESC")
     rows = cursor.fetchall()
     conn.close()
-    saidas = [dict(row) for row in rows]
+
+    saidas = [
+        {
+            "id": row[0],
+            "motivo": row[1],
+            "valor": float(row[2]) if row[2] is not None else None,
+            "data": row[3].isoformat() if hasattr(row[3], "isoformat") else row[3],
+            "funcionario": row[4],
+            "data_registro": row[5].isoformat() if hasattr(row[5], "isoformat") else row[5],
+        }
+        for row in rows
+    ]
+
     return jsonify(saidas)
 
 # Rota: adicionar saída
@@ -783,7 +813,7 @@ def adicionar_saida():
         
         # Verificação de duplicação (últimos 2 minutos)
         cursor.execute(
-            "SELECT id FROM saidas WHERE motivo = ? AND valor = ? AND data = ? AND funcionario = ? AND datetime(data_registro) > datetime('now', '-2 minutes')",
+            "SELECT id FROM saidas WHERE motivo = ? AND valor = ? AND data = ? AND funcionario = ? AND data_registro > NOW() - INTERVAL '2 minutes'",
             (motivo, valor, data, funcionario)
         )
         duplicata = cursor.fetchone()
@@ -853,7 +883,7 @@ def obter_resumo_vendas_concluidas():
     try:
         data = request.args.get('data', datetime.now().strftime('%Y-%m-%d'))
         
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Buscar vendas concluídas do dia especificado (com custo preenchido)
@@ -871,11 +901,11 @@ def obter_resumo_vendas_concluidas():
         resultado = cursor.fetchone()
         
         resumo = {
-            "total_dinheiro": resultado[0] if resultado else 0,
-            "total_cartao": resultado[1] if resultado else 0,
-            "total_pix": resultado[2] if resultado else 0,
-            "total_vale": resultado[3] if resultado else 0,
-            "total_geral": resultado[4] if resultado else 0
+            "total_dinheiro": _decimal_or_default(resultado[0]) if resultado else 0,
+            "total_cartao": _decimal_or_default(resultado[1]) if resultado else 0,
+            "total_pix": _decimal_or_default(resultado[2]) if resultado else 0,
+            "total_vale": _decimal_or_default(resultado[3]) if resultado else 0,
+            "total_geral": _decimal_or_default(resultado[4]) if resultado else 0,
         }
         
         conn.close()
@@ -891,7 +921,7 @@ def obter_resumo_vendas_concluidas_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
         
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Buscar vendas concluídas do período especificado (com custo preenchido)
@@ -909,11 +939,11 @@ def obter_resumo_vendas_concluidas_periodo():
         resultado = cursor.fetchone()
         
         resumo = {
-            "total_dinheiro": resultado[0] if resultado else 0,
-            "total_cartao": resultado[1] if resultado else 0,
-            "total_pix": resultado[2] if resultado else 0,
-            "total_vale": resultado[3] if resultado else 0,
-            "total_geral": resultado[4] if resultado else 0
+            "total_dinheiro": _decimal_or_default(resultado[0]) if resultado else 0,
+            "total_cartao": _decimal_or_default(resultado[1]) if resultado else 0,
+            "total_pix": _decimal_or_default(resultado[2]) if resultado else 0,
+            "total_vale": _decimal_or_default(resultado[3]) if resultado else 0,
+            "total_geral": _decimal_or_default(resultado[4]) if resultado else 0,
         }
         
         conn.close()
@@ -932,7 +962,7 @@ def obter_resumo_saidas_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
         
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Buscar saídas do período especificado
@@ -945,7 +975,7 @@ def obter_resumo_saidas_periodo():
         resultado = cursor.fetchone()
         
         resumo = {
-            "total": resultado[0] if resultado else 0
+            "total": _decimal_or_default(resultado[0]) if resultado else 0
         }
         
         conn.close()
@@ -963,7 +993,7 @@ def obter_resumo_assistencias_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
 
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -982,11 +1012,11 @@ def obter_resumo_assistencias_periodo():
         conn.close()
 
         resumo = {
-            "total_dinheiro": resultado[0],
-            "total_cartao": resultado[1],
-            "total_pix": resultado[2],
-            "total_vale": resultado[3],
-            "total_geral": resultado[4]
+            "total_dinheiro": _decimal_or_default(resultado[0]) if resultado else 0,
+            "total_cartao": _decimal_or_default(resultado[1]) if resultado else 0,
+            "total_pix": _decimal_or_default(resultado[2]) if resultado else 0,
+            "total_vale": _decimal_or_default(resultado[3]) if resultado else 0,
+            "total_geral": _decimal_or_default(resultado[4]) if resultado else 0,
         }
 
         return jsonify(resumo), 200
@@ -1002,7 +1032,7 @@ def obter_resumo_vendas_pendentes_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
 
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -1021,6 +1051,10 @@ def obter_resumo_vendas_pendentes_periodo():
         conn.close()
 
         qtd, total_dinheiro, total_cartao, total_pix, total_vale = row
+        total_dinheiro = _decimal_or_default(total_dinheiro)
+        total_cartao = _decimal_or_default(total_cartao)
+        total_pix = _decimal_or_default(total_pix)
+        total_vale = _decimal_or_default(total_vale)
         total_geral = total_dinheiro + total_cartao + total_pix + total_vale
 
         return jsonify({
@@ -1043,7 +1077,7 @@ def obter_resumo_assistencias_pendentes_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
 
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -1062,6 +1096,10 @@ def obter_resumo_assistencias_pendentes_periodo():
         conn.close()
 
         qtd, total_dinheiro, total_cartao, total_pix, total_vale = row
+        total_dinheiro = _decimal_or_default(total_dinheiro)
+        total_cartao = _decimal_or_default(total_cartao)
+        total_pix = _decimal_or_default(total_pix)
+        total_vale = _decimal_or_default(total_vale)
         total_geral = total_dinheiro + total_cartao + total_pix + total_vale
 
         return jsonify({
@@ -1081,7 +1119,7 @@ def obter_resumo_assistencias_pendentes_periodo():
 @app.route('/obter_vendedores', methods=['GET'])
 def obter_vendedores():
     try:
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute("SELECT DISTINCT nome_usuario FROM usuarios ORDER BY nome_usuario")
@@ -1102,7 +1140,7 @@ def obter_lucro_vendas_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
         
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Calcular lucro (valor_total - custo_produto) apenas para vendas concluídas
@@ -1119,9 +1157,9 @@ def obter_lucro_vendas_periodo():
         resultado = cursor.fetchone()
         
         resumo = {
-            "lucro_total": resultado[0] if resultado else 0,
-            "total_vendas": resultado[1] if resultado else 0,
-            "total_custo": resultado[2] if resultado else 0
+            "lucro_total": _decimal_or_default(resultado[0]) if resultado else 0,
+            "total_vendas": _decimal_or_default(resultado[1]) if resultado else 0,
+            "total_custo": _decimal_or_default(resultado[2]) if resultado else 0,
         }
         
         conn.close()
@@ -1137,7 +1175,7 @@ def obter_lucro_assistencias_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
         
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Calcular lucro (valor_servico - custo_servico) apenas para assistências concluídas
@@ -1155,9 +1193,9 @@ def obter_lucro_assistencias_periodo():
         resultado = cursor.fetchone()
         
         resumo = {
-            "lucro_total": resultado[0] if resultado else 0,
-            "total_servicos": resultado[1] if resultado else 0,
-            "total_custo": resultado[2] if resultado else 0
+            "lucro_total": _decimal_or_default(resultado[0]) if resultado else 0,
+            "total_servicos": _decimal_or_default(resultado[1]) if resultado else 0,
+            "total_custo": _decimal_or_default(resultado[2]) if resultado else 0,
         }
         
         conn.close()
@@ -1175,7 +1213,7 @@ def obter_lucro_vendedores_periodo():
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
         
-        conn = sqlite3.connect('sistema_seguranca.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Buscar lucro de vendas por vendedor
@@ -1218,6 +1256,9 @@ def obter_lucro_vendedores_periodo():
         
         # Processar vendas
         for vendedor, lucro_v, total_v, custo_v, qtd_v in lucro_vendas:
+            lucro_v = _decimal_or_default(lucro_v)
+            total_v = _decimal_or_default(total_v)
+            custo_v = _decimal_or_default(custo_v)
             if vendedor not in vendedores:
                 vendedores[vendedor] = {
                     'lucro_vendas': 0,
@@ -1238,6 +1279,9 @@ def obter_lucro_vendedores_periodo():
         
         # Processar assistências
         for vendedor, lucro_a, total_a, custo_a, qtd_a in lucro_assistencias:
+            lucro_a = _decimal_or_default(lucro_a)
+            total_a = _decimal_or_default(total_a)
+            custo_a = _decimal_or_default(custo_a)
             if vendedor not in vendedores:
                 vendedores[vendedor] = {
                     'lucro_vendas': 0,

@@ -267,7 +267,7 @@ function fecharModalDetalhesVenda() {
 //  CARREGAR VENDAS - CORRIGIDA
 // ============================
 function carregarVendas() {
-    fetch('http://127.0.0.1:5000/obter_vendas')
+    apiFetch('/obter_vendas')
         .then(response => response.json())
         .then(vendas => {
             const tabela = document.getElementById('transactions-table');
@@ -439,7 +439,7 @@ async function salvarVendaNoBanco(dadosVenda) {
     try {
         console.log("📤 Enviando dados para API...");
 
-        const response = await fetch('http://127.0.0.1:5000/registrar_venda', {
+        const response = await apiFetch('/registrar_venda', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dadosVenda)
@@ -488,7 +488,7 @@ function salvarCusto() {
         return;
     }
 
-    fetch(`http://127.0.0.1:5000/atualizar_custo/${vendaIdAtual}`, {
+    apiFetch(`/atualizar_custo/${vendaIdAtual}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ custo: parseFloat(custo) })
@@ -673,7 +673,7 @@ function salvarEdicao() {
         nome_vendedor: vendedorSelecionado
     };
 
-    fetch(`http://127.0.0.1:5000/editar_venda/${vendaIdEditando}`, {
+    apiFetch(`/editar_venda/${vendaIdEditando}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
@@ -697,7 +697,7 @@ function fecharModalEditar() {
 function confirmarExclusao(botao, idVenda) {
     if (!confirm("Tem certeza que deseja excluir esta venda?")) return;
 
-    fetch(`http://127.0.0.1:5000/excluir_venda/${idVenda}`, {
+    apiFetch(`/excluir_venda/${idVenda}`, {
         method: 'DELETE'
     })
         .then(res => res.json())
@@ -715,7 +715,7 @@ function confirmarExclusao(botao, idVenda) {
 let tabvendedores = [];
 
 function carregarVendedores() {
-    return fetch('http://127.0.0.1:5000/obter_vendedores')
+    return apiFetch('/obter_vendedores')
         .then(response => response.json())
         .then(vendedores => {
             tabvendedores = vendedores;
@@ -1447,7 +1447,7 @@ function preencherFiltroVendedoresVendas() {
 function carregarVendas() {
     
     
-    fetch('http://127.0.0.1:5000/obter_vendas')
+    apiFetch('/obter_vendas')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Erro ao carregar vendas: ' + response.status);

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const registroFuncao = document.getElementById('user-role').value;
 
             // Primeiro, buscar os usuários existentes para verificação
-            fetch("http://127.0.0.1:5000/obter_logins")
+            apiFetch("/obter_logins")
                 .then(response => response.json())
                 .then(logins => {
                     // Verifica se já existe usuário com mesmo nome e senha
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     // Se não existir, faz o registro normalmente
-                    fetch('http://127.0.0.1:5000/registrar', {
+                    apiFetch('/registrar', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Função que carrega e exibe os usuários cadastrados na tabela
 function carregarLogins() {
-    fetch("http://127.0.0.1:5000/obter_logins") // Requisição GET para obter os logins
+    apiFetch("/obter_logins") // Requisição GET para obter os logins
         .then(response => response.json())
         .then(logins => {
             const tabela = document.getElementById("usuarios-table"); // Elemento <tbody> da tabela
@@ -145,7 +145,7 @@ function salvarEdicao(event) {
     const funcao = document.getElementById("input-funcao").value;
 
     // Primeiro, busca todos os usuários para verificar duplicidade
-    fetch("http://127.0.0.1:5000/obter_logins")
+    apiFetch("/obter_logins")
         .then(response => response.json())
         .then(logins => {
             const usuarioDuplicado = logins.some(login =>
@@ -160,7 +160,7 @@ function salvarEdicao(event) {
             }
 
             // Se não for duplicado, faz a edição normalmente
-            fetch(`http://127.0.0.1:5000/editar_usuarios/${usuarioEditandoId}`, {
+            apiFetch(`/editar_usuarios/${usuarioEditandoId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -188,7 +188,7 @@ function salvarEdicao(event) {
 // Função para excluir um usuário com confirmação
 function excluirUsuario(id) {
     if (confirm("Tem certeza que deseja excluir este usuário?")) {
-        fetch(`http://127.0.0.1:5000/usuarios/${id}`, {
+        apiFetch(`/usuarios/${id}`, {
             method: 'DELETE'
         })
             .then(response => response.json())
@@ -268,7 +268,7 @@ if (loginForm) {
         }
 
         // Se não for acesso padrão, faz login normal
-        fetch("http://127.0.0.1:5000/login", {
+        apiFetch("/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -281,7 +281,7 @@ if (loginForm) {
                     localStorage.removeItem("isDefaultUser");
 
                     // 🟩 Obter o cargo do usuário e armazenar
-                    fetch("http://127.0.0.1:5000/verificar_cargo", {
+                    apiFetch("/verificar_cargo", {
                         method: "GET",
                         credentials: "include"
                     })
