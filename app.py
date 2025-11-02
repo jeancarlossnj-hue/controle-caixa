@@ -99,21 +99,20 @@ def index():
     return render_template('index.html')
 
 
-# ===================================
-# 🔹 ROTA DE TESTE DE CONEXÃO
-# ===================================
 @app.route('/test_db')
 def test_db():
     try:
-        conn = get_connection()
+        conn = get_db_connection()
         cur = conn.cursor()
-        if isinstance(conn, sqlite3.Connection):
-            cur.execute("SELECT datetime('now')")
-        else:
-            cur.execute("SELECT NOW();")
+        cur.execute("SELECT NOW();")
         data = cur.fetchone()
+
+        # 🔧 Corrigido: transforma o resultado em string legível
+        timestamp = str(list(data.values())[0]) if isinstance(data, dict) else str(data[0])
+
+        cur.close()
         conn.close()
-        return jsonify({"status": "ok", "timestamp": data})
+        return jsonify({"status": "ok", "timestamp": timestamp})
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)})
 
