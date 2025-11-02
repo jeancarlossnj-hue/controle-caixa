@@ -168,15 +168,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 });
-
 // ==========================================
-// 👤 LOGIN E LOGOUT
+// 👤 LOGIN E LOGOUT (melhorado)
 // ==========================================
 const SENHA_PADRAO = "luzdomundo";
 
-function verificarAcessoPadrao(username, password) {
-    if (username.toLowerCase() === "luzdomundo" && password === SENHA_PADRAO) {
-        return { success: true, username: "Administrador", isDefault: true, role: "Gerente" };
+// Verifica login padrão offline
+function verificarAcessoPadrao(usuario, senha) {
+    if (usuario.toLowerCase() === "luzdomundo" && senha === SENHA_PADRAO) {
+        return {
+            success: true,
+            username: "Administrador",
+            isDefault: true,
+            role: "Gerente"
+        };
     }
     return null;
 }
@@ -185,55 +190,81 @@ const loginForm = document.getElementById("login-form");
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value.trim();
+
+        const usuario = document.getElementById("username").value.trim();
+        const senha = document.getElementById("password").value.trim();
         const errorBox = document.getElementById("login-error");
         const spinner = document.getElementById("loading-spinner");
+        const botaoLogin = document.getElementById("login-button");
 
-        // Verifica se é o acesso padrão
-        const acessoPadrao = verificarAcessoPadrao(username, password);
+        // Limpa mensagens e mostra carregamento
+        errorBox.classList.add("hidden");
+        spinner.classList.remove("hidden");
+        botaoLogin.disabled = true;
+
+        // 🧩 Verifica acesso padrão local
+        const acessoPadrao = verificarAcessoPadrao(usuario, senha);
         if (acessoPadrao && acessoPadrao.success) {
+            spinner.classList.add("hidden");
+            botaoLogin.disabled = false;
+
             localStorage.setItem("loggedInUser", acessoPadrao.username);
+            localStorage.setItem("userRole", acessoPadrao.role);
             localStorage.setItem("isDefaultUser", "true");
-            localStorage.setItem("userRole", "Gerente");
-            window.location.href = "index.html";
+
+            // Mostra mensagem de sucesso antes de redirecionar
+            errorBox.textContent = "✅ Acesso autorizado como Administrador.";
+            errorBox.style.color = "green";
+            errorBox.classList.remove("hidden");
+
+            setTimeout(() => window.location.href = "index.html", 1000);
             return;
         }
 
-        // Exibe carregando
-        errorBox.classList.add("hidden");
-        spinner.classList.remove("hidden");
-
+        // 🔄 Caso não seja o login padrão, verifica no servidor
         try {
             const res = await fetch(`${API_BASE}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username: usuario, password: senha })
             });
 
             const data = await res.json();
             spinner.classList.add("hidden");
+            botaoLogin.disabled = false;
+
+            if (res.status === 401 || !data.success) {
+                errorBox.textContent = "❌ Usuário ou senha incorretos.";
+                errorBox.style.color = "red";
+                errorBox.classList.remove("hidden");
+                return;
+            }
 
             if (data.success) {
                 localStorage.setItem("loggedInUser", data.username);
                 localStorage.removeItem("isDefaultUser");
 
+                // Consulta cargo do usuário logado
                 const infoRes = await fetch(`${API_BASE}/verificar_cargo`, {
                     method: "GET",
                     credentials: "include"
                 });
-                const info = await infoRes.json();
 
+                const info = await infoRes.json();
                 localStorage.setItem("userRole", info.success ? info.cargo : "Funcionario");
-                window.location.href = "index.html";
-            } else {
-                errorBox.textContent = data.message || "Usuário ou senha incorretos.";
+
+                errorBox.textContent = "✅ Login realizado com sucesso!";
+                errorBox.style.color = "green";
                 errorBox.classList.remove("hidden");
+
+                setTimeout(() => window.location.href = "index.html", 1000);
             }
         } catch (err) {
             spinner.classList.add("hidden");
-            errorBox.textContent = "Erro de conexão. Verifique sua internet.";
+            botaoLogin.disabled = false;
+            errorBox.textContent = "⚠️ Erro de conexão. Verifique sua internet.";
+            errorBox.style.color = "orange";
             errorBox.classList.remove("hidden");
             console.error("Erro:", err);
         }
