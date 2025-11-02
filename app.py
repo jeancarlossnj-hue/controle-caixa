@@ -286,27 +286,53 @@ def registrar():
     except Exception as e:
         return jsonify({'message': f'Erro: {e}'}), 500
 
-
 # ===================================
 # 🔹 LOGIN DO USUÁRIO
 # ===================================
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
 
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nome_usuario FROM usuarios WHERE nome_usuario = %s AND senha = %s", (username, password))
-    user = cursor.fetchone()
-    conn.close()
+        if not username or not password:
+            return jsonify({"success": False, "message": "Preencha usuário e senha"}), 400
 
-    if user:
-        session["user_id"] = user["id"] if isinstance(user, dict) else user[0]
-        session["username"] = user["nome_usuario"] if isinstance(user, dict) else user[1]
-        return jsonify({"success": True, "username": session["username"]})
-    return jsonify({"success": False, "message": "Usuário ou senha inválidos"}), 401
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, nome_usuario, funcao 
+            FROM usuarios 
+            WHERE nome_usuario = %s AND senha = %s
+        """, (username, password))
+
+        user = cursor.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({"success": False, "message": "Usuário ou senha incorretos."}), 401
+
+        # Lida tanto com dict quanto com tupla
+        user_id = user["id"] if isinstance(user, dict) else user[0]
+        user_name = user["nome_usuario"] if isinstance(user, dict) else user[1]
+        user_funcao = user["funcao"] if isinstance(user, dict) else user[2]
+
+        session["user_id"] = user_id
+        session["username"] = user_name
+        session["funcao"] = user_funcao
+
+        return jsonify({
+            "success": True,
+            "username": user_name,
+            "cargo": user_funcao
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Erro ao fazer login: {e}")
+        return jsonify({"success": False, "message": f"Erro no servidor: {e}"}), 500
+
 
 
 # ===================================
