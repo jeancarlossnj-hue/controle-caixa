@@ -105,15 +105,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
-# ===================================
-#    ROTA PRINCIPAL
-# ===================================
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
 @app.route('/test_db')
 def test_db():
     try:
