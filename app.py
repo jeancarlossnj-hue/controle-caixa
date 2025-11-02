@@ -199,6 +199,32 @@ def atualizar_custo(id):
 
 
 # ===================================
+# 🔹 OBTER TODOS OS USUÁRIOS (GET)
+# ===================================
+@app.route("/obter_logins", methods=["GET"])
+def obter_logins():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                id, 
+                nome_usuario AS usuario, 
+                senha, 
+                funcao AS cargo
+            FROM usuarios
+            ORDER BY id ASC
+        """)
+        logins = cursor.fetchall()
+        conn.close()
+        return jsonify(logins), 200
+
+    except Exception as e:
+        print(f"❌ Erro ao buscar logins: {e}")
+        return jsonify({"erro": str(e)}), 500
+
+
+# ===================================
 # 🔹 OBTER VENDAS
 # ===================================
 @app.route('/obter_vendas', methods=['GET'])
