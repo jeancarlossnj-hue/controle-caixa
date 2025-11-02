@@ -197,7 +197,6 @@ def atualizar_custo(id):
     except Exception as e:
         return jsonify({"mensagem": f"Erro: {e}"}), 500
 
-
 # ===================================
 # 🔹 OBTER TODOS OS USUÁRIOS (GET)
 # ===================================
@@ -216,8 +215,20 @@ def obter_logins():
             ORDER BY id ASC
         """)
         logins = cursor.fetchall()
+
+        # ✅ Converte o resultado em uma lista de dicionários
+        logins_formatados = [
+            {
+                "id": row["id"] if isinstance(row, dict) else row[0],
+                "usuario": row["usuario"] if isinstance(row, dict) else row[1],
+                "senha": row["senha"] if isinstance(row, dict) else row[2],
+                "cargo": row["cargo"] if isinstance(row, dict) else row[3],
+            }
+            for row in logins
+        ]
+
         conn.close()
-        return jsonify(logins), 200
+        return jsonify(logins_formatados), 200
 
     except Exception as e:
         print(f"❌ Erro ao buscar logins: {e}")
@@ -330,6 +341,6 @@ def verificar_cargo():
 # ===================================
 # 🔹 EXECUÇÃO DO SERVIDOR
 # ===================================
-if __name__ == "__main__":
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
