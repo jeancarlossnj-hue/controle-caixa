@@ -352,17 +352,10 @@ def verificar_cargo():
 # 🔹 EXECUÇÃO E CRIAÇÃO DE TABELAS
 # ===================================
 
-# Cria as tabelas automaticamente ao iniciar
-try:
-    criar_tabelas()
-    print("✅ Tabelas criadas/verificadas com sucesso!")
-except Exception as e:
-    print("⚠️ Erro ao criar tabelas automaticamente:", e)
-
-# Rota opcional para inicializar manualmente (caso necessário no Railway)
 @app.route("/init_db")
 def init_db():
     try:
+        from bancosdados import criar_tabelas
         criar_tabelas()
         return jsonify({
             "status": "sucesso",
@@ -373,13 +366,6 @@ def init_db():
             "status": "erro",
             "mensagem": str(e)
         })
-
-# ===================================
-# 🔹 EXECUÇÃO DO SERVIDOR
-# ===================================
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port, debug=True)
 
 
 # ===================================
