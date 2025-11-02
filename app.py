@@ -7,6 +7,9 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import sqlite3
 
+print("🔍 DATABASE_URL carregada:", os.getenv("DATABASE_URL"))
+
+
 # ===================================
 # 🔹 CONFIGURAÇÃO INICIAL DO FLASK
 # ===================================
