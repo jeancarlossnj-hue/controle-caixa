@@ -19,7 +19,7 @@ CORS(app, supports_credentials=True)
 # ===================================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-def get_db_connection():
+def get_connection():
     """Retorna conexão com PostgreSQL"""
     if not DATABASE_URL:
         raise Exception("❌ Variável DATABASE_URL não configurada no Railway!")
@@ -39,7 +39,7 @@ def index():
 @app.route('/test_db')
 def test_db():
     try:
-        conn = get_db_connection()
+        conn = get_connection()
         cur = conn.cursor()
         cur.execute("SELECT NOW();")
         data = cur.fetchone()
@@ -52,6 +52,7 @@ def test_db():
         return jsonify({"status": "ok", "timestamp": timestamp})
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)})
+
 
 # Página inicial
 @app.route('/')
@@ -105,22 +106,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/test_db')
-def test_db():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT NOW();")
-        data = cur.fetchone()
 
-        # 🔧 Corrigido: transforma o resultado em string legível
-        timestamp = str(list(data.values())[0]) if isinstance(data, dict) else str(data[0])
-
-        cur.close()
-        conn.close()
-        return jsonify({"status": "ok", "timestamp": timestamp})
-    except Exception as e:
-        return jsonify({"status": "erro", "mensagem": str(e)})
 
 
 # ===================================
