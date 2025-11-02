@@ -348,6 +348,39 @@ def verificar_cargo():
         return jsonify({"success": True, "cargo": cargo})
     return jsonify({"success": False, "mensagem": "Usuário não encontrado"}), 404
 
+# ===================================
+# 🔹 EXECUÇÃO E CRIAÇÃO DE TABELAS
+# ===================================
+
+# Cria as tabelas automaticamente ao iniciar
+try:
+    criar_tabelas()
+    print("✅ Tabelas criadas/verificadas com sucesso!")
+except Exception as e:
+    print("⚠️ Erro ao criar tabelas automaticamente:", e)
+
+# Rota opcional para inicializar manualmente (caso necessário no Railway)
+@app.route("/init_db")
+def init_db():
+    try:
+        criar_tabelas()
+        return jsonify({
+            "status": "sucesso",
+            "mensagem": "✅ Tabelas criadas/verificadas com sucesso no PostgreSQL!"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "erro",
+            "mensagem": str(e)
+        })
+
+# ===================================
+# 🔹 EXECUÇÃO DO SERVIDOR
+# ===================================
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port, debug=True)
+
 
 # ===================================
 # 🔹 EXECUÇÃO DO SERVIDOR
