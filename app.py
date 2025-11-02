@@ -4,8 +4,8 @@ from datetime import datetime
 from functools import wraps
 import os
 import psycopg2
-import sqlite3  # Import adicionado
 from psycopg2.extras import RealDictCursor
+import sqlite3
 
 # ===================================
 # 🔹 CONFIGURAÇÃO INICIAL DO FLASK
@@ -15,28 +15,43 @@ app.secret_key = os.getenv("SECRET_KEY", "sua_chave_super_segura")
 CORS(app, supports_credentials=True)
 
 # ===================================
-# 🔹 FUNÇÃO UNIVERSAL DE CONEXÃO
+# 🔹 CONEXÃO COM O BANCO POSTGRESQL (RAILWAY)
 # ===================================
-def get_connection():
-    """
-    Retorna uma conexão com o banco de dados:
-    - PostgreSQL (Railway) se DATABASE_URL estiver configurada
-    - SQLite local se não estiver (modo desenvolvimento)
-    """
-    DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-    if DATABASE_URL and DATABASE_URL.startswith("postgres"):
-        try:
-            conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-            return conn
-        except Exception as e:
-            print(f"❌ Erro ao conectar ao PostgreSQL: {e}")
-            raise
-    else:
-        conn = sqlite3.connect("sistema_seguranca.db", check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        return conn
+def get_db_connection():
+    """Retorna conexão com PostgreSQL"""
+    if not DATABASE_URL:
+        raise Exception("❌ Variável DATABASE_URL não configurada no Railway!")
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    return conn
 
+# ===================================
+# 🔹 ROTA PRINCIPAL
+# ===================================
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# ===================================
+# 🔹 TESTE DE CONEXÃO AO BANCO
+# ===================================
+@app.route('/test_db')
+def test_db():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT NOW();")
+        data = cur.fetchone()
+
+        # ✅ converte o timestamp em string JSON compatível
+        timestamp = str(list(data.values())[0]) if isinstance(data, dict) else str(data[0])
+
+        cur.close()
+        conn.close()
+        return jsonify({"status": "ok", "timestamp": timestamp})
+    except Exception as e:
+        return jsonify({"status": "erro", "mensagem": str(e)})
 
 # Página inicial
 @app.route('/')
