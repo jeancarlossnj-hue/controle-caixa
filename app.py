@@ -197,10 +197,16 @@ def obter_logins():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, usuario, senha, cargo FROM usuarios;")
+        cur.execute("""
+            SELECT 
+                id, 
+                nome_usuario AS usuario, 
+                senha, 
+                funcao AS cargo 
+            FROM usuarios;
+        """)
         rows = cur.fetchall()
 
-        # ✅ Converter as linhas para dicionário (compatível com PostgreSQL)
         logins = []
         for row in rows:
             logins.append({
@@ -212,7 +218,6 @@ def obter_logins():
 
         cur.close()
         conn.close()
-
         return jsonify(logins)
 
     except Exception as e:
