@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, session, render_template
 from bancodedados import criar_tabelas
-criar_tabelas()
 from flask_cors import CORS
 from datetime import datetime
 from functools import wraps
@@ -18,7 +17,7 @@ print("🔍 DATABASE_URL carregada:", os.getenv("DATABASE_URL"))
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.getenv("SECRET_KEY", "sua_chave_super_segura")
 CORS(app, supports_credentials=True)
-
+criar_tabelas()
 # ===================================
 # 🔹 CONEXÃO COM O BANCO POSTGRESQL (RAILWAY)
 # ===================================
