@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, session, render_template
+from bancodedados import criar_tabelas
+criar_tabelas()
 from flask_cors import CORS
 from datetime import datetime
 from functools import wraps
