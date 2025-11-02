@@ -188,41 +188,31 @@ def atualizar_custo(id):
     except Exception as e:
         return jsonify({"mensagem": f"Erro: {e}"}), 500
 
-# ===================================
-# 🔹 OBTER TODOS OS USUÁRIOS (GET)
-# ===================================
-@app.route("/obter_logins", methods=["GET"])
+@app.route('/obter_logins', methods=['GET'])
 def obter_logins():
     try:
         conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT 
-                id, 
-                nome_usuario AS usuario, 
-                senha, 
-                funcao AS cargo
-            FROM usuarios
-            ORDER BY id ASC
-        """)
-        logins = cursor.fetchall()
+        cur = conn.cursor()
+        cur.execute("SELECT id, usuario, senha, cargo FROM usuarios;")
+        rows = cur.fetchall()
 
-        # ✅ Converte o resultado em uma lista de dicionários
-        logins_formatados = [
-            {
-                "id": row["id"] if isinstance(row, dict) else row[0],
-                "usuario": row["usuario"] if isinstance(row, dict) else row[1],
-                "senha": row["senha"] if isinstance(row, dict) else row[2],
-                "cargo": row["cargo"] if isinstance(row, dict) else row[3],
-            }
-            for row in logins
-        ]
+        # ✅ Converter as linhas para dicionário (compatível com PostgreSQL)
+        logins = []
+        for row in rows:
+            logins.append({
+                "id": row[0],
+                "usuario": row[1],
+                "senha": row[2],
+                "cargo": row[3]
+            })
 
+        cur.close()
         conn.close()
-        return jsonify(logins_formatados), 200
+
+        return jsonify(logins)
 
     except Exception as e:
-        print(f"❌ Erro ao buscar logins: {e}")
+        print("❌ Erro ao buscar logins:", e)
         return jsonify({"erro": str(e)}), 500
 
 
