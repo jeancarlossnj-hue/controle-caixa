@@ -267,39 +267,64 @@ if (loginForm) {
             return;
         }
 
-        // Se não for acesso padrão, faz login normal
-        fetch("http://127.0.0.1:5000/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ username, password })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    localStorage.setItem("loggedInUser", data.username);
-                    localStorage.removeItem("isDefaultUser");
+        const loginForm = document.getElementById('login-form');
 
-                    // 🟩 Obter o cargo do usuário e armazenar
-                    fetch("http://127.0.0.1:5000/verificar_cargo", {
-                        method: "GET",
-                        credentials: "include"
-                    })
-                        .then(res => res.json())
-                        .then(info => {
-                            if (info.success) {
-                                localStorage.setItem("userRole", info.cargo); // Ex: "Gerente" ou "Funcionario"
-                            } else {
-                                localStorage.setItem("userRole", "Funcionario"); // padrão
-                            }
-                            window.location.href = "index.html";
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const errorBox = document.getElementById('login-error');
+                const spinner = document.getElementById('loading-spinner');
+
+                // Oculta mensagens anteriores
+                errorBox.classList.add('hidden');
+                spinner.classList.remove('hidden');
+
+                try {
+                    // Faz o login normalmente
+                    const res = await fetch("https://seu-dominio-do-railway.app/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const data = await res.json();
+                    spinner.classList.add('hidden');
+
+                    if (data.success) {
+                        localStorage.setItem("loggedInUser", data.username);
+                        localStorage.removeItem("isDefaultUser");
+
+                        // Verifica cargo do usuário
+                        const infoRes = await fetch("https://seu-dominio-do-railway.app/verificar_cargo", {
+                            method: "GET",
+                            credentials: "include"
                         });
-                } else {
-                    alert(data.message || "Erro ao fazer login");
-                }
-            })
+                        const info = await infoRes.json();
 
-            .catch(err => console.error("Erro:", err));
+                        if (info.success) {
+                            localStorage.setItem("userRole", info.cargo);
+                        } else {
+                            localStorage.setItem("userRole", "Funcionario");
+                        }
+
+                        window.location.href = "/index";
+                    } else {
+                        errorBox.textContent = data.message || "Usuário ou senha incorretos.";
+                        errorBox.classList.remove('hidden');
+                    }
+                } catch (err) {
+                    spinner.classList.add('hidden');
+                    errorBox.textContent = "Erro de conexão. Verifique sua internet.";
+                    errorBox.classList.remove('hidden');
+                    console.error("Erro:", err);
+                }
+            });
+        }
+
     });
 }
 
