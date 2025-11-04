@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         }, 2000);
                     }
+
                 })
                 .catch(error => {
                     console.error('❌ Erro ao registrar usuário:', error);
@@ -107,28 +108,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    // ==========================================
-    // 🚪 ABRIR E FECHAR MODAL DE CADASTRO
-    // ==========================================
-    document.addEventListener('DOMContentLoaded', () => {
-        const botaoAbrir = document.getElementById('abrir-cadastro');
-        const botaoCancelar = document.getElementById('cancel-cadastro');
-        const modalCadastro = document.getElementById('modal-cadastro');
-
-        // 👉 Abre o modal
-        if (botaoAbrir && modalCadastro) {
-            botaoAbrir.addEventListener('click', () => {
-                modalCadastro.classList.remove('hidden');
-            });
-        }
-
-        // 👉 Fecha ao clicar em “Cancelar”
-        if (botaoCancelar && modalCadastro) {
-            botaoCancelar.addEventListener('click', () => {
-                modalCadastro.classList.add('hidden');
-            });
-        }
-    });
 
     carregarLogins();
 });
