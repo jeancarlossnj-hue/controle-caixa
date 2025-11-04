@@ -42,11 +42,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(data => {
                     if (!data) return;
                     if (data.message === 'Usuário registrado com sucesso.') {
-                        alert('✅ Registro bem-sucedido!');
+                        // ✅ Exibe mensagem visual de sucesso
+                        const msg = document.getElementById('msg-sucesso');
+                        msg.classList.remove('hidden');
+                        msg.textContent = "✅ Usuário cadastrado com sucesso!";
+
                         carregarLogins();
                         form.reset();
-                    } else {
-                        alert(`⚠️ ${data.message}`);
+
+                        // ⏳ Fecha o modal após 2 segundos
+                        setTimeout(() => {
+                            msg.classList.add('hidden');
+                            const modalCadastro = document.getElementById('modal-cadastro');
+                            if (modalCadastro) {
+                                modalCadastro.classList.add('hidden');
+                            }
+                        }, 2000);
                     }
                 })
                 .catch(error => {
@@ -86,6 +97,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             })
             .catch(error => console.error("❌ Erro ao carregar usuários:", error));
+    }
+    const botaoCancelar = document.getElementById('cancel-cadastro');
+    if (botaoCancelar) {
+        botaoCancelar.addEventListener('click', () => {
+            const modalCadastro = document.getElementById('modal-cadastro');
+            if (modalCadastro) {
+                modalCadastro.classList.add('hidden');
+            }
+        });
     }
 
     carregarLogins();
