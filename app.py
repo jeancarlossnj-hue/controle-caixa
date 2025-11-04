@@ -194,34 +194,37 @@ def atualizar_custo(id):
 
 @app.route('/obter_logins', methods=['GET'])
 def obter_logins():
+    import traceback
     try:
+        print("🟡 Iniciando leitura de usuários...")
         conn = get_connection()
+        print("🟢 Conexão estabelecida com sucesso!")
         cur = conn.cursor()
-        cur.execute("""
-            SELECT 
-                id, 
-                nome_usuario AS usuario, 
-                senha, 
-                funcao AS cargo 
-            FROM usuarios;
-        """)
+
+        # Detectar automaticamente colunas
+        cur.execute("SELECT * FROM usuarios LIMIT 1")
+        colunas = [desc[0] for desc in cur.description]
+        print("📋 Colunas encontradas:", colunas)
+
+        if "funcao" in colunas and "nome_usuario" in colunas:
+            query = "SELECT id, nome_usuario AS usuario, senha, funcao AS cargo FROM usuarios"
+        elif "cargo" in colunas and "usuario" in colunas:
+            query = "SELECT id, usuario, senha, cargo FROM usuarios"
+        else:
+            raise Exception(f"Tabela usuarios não contém colunas esperadas: {colunas}")
+
+        cur.execute(query)
         rows = cur.fetchall()
-
-        logins = []
-        for row in rows:
-            logins.append({
-                "id": row[0],
-                "usuario": row[1],
-                "senha": row[2],
-                "cargo": row[3]
-            })
-
         cur.close()
         conn.close()
+
+        logins = [{"id": r[0], "usuario": r[1], "senha": r[2], "cargo": r[3]} for r in rows]
+        print(f"✅ {len(logins)} usuários retornados.")
         return jsonify(logins)
 
     except Exception as e:
         print("❌ Erro ao buscar logins:", e)
+        traceback.print_exc()
         return jsonify({"erro": str(e)}), 500
 
 
