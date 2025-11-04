@@ -35,18 +35,17 @@
                         class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Digite sua senha" required />
                 </div>
-                <button type="submit"
+                <button id="login-button" type="submit"
                     class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 flex items-center justify-center">
                     <i class="fas fa-sign-in-alt mr-2"></i> Entrar
                 </button>
             </form>
-            <!-- 🔄 SPINNER DE CARREGAMENTO -->
+            <!--  SPINNER DE CARREGAMENTO -->
             <div id="loading-spinner" class="hidden mt-4 flex flex-col items-center justify-center space-y-2">
                 <div class="spinner"></div>
                 <p style="color:#555; font-size:14px;">Verificando credenciais...</p>
             </div>
-
-            <!-- 📢 MENSAGEM DE ERRO / SUCESSO -->
+            <!--  MENSAGEM DE ERRO / SUCESSO -->
             <div id="login-error" class="hidden mt-2 font-semibold"></div>
 
 

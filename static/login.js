@@ -167,21 +167,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(error => console.error("Erro ao excluir usuário:", error));
         }
     };
-});
-// ==========================================
-// 👤 LOGIN E LOGOUT (melhorado)
+});// ==========================================
+// 👤 LOGIN E LOGOUT
 // ==========================================
 const SENHA_PADRAO = "luzdomundo";
 
-// Verifica login padrão offline
-function verificarAcessoPadrao(usuario, senha) {
-    if (usuario.toLowerCase() === "luzdomundo" && senha === SENHA_PADRAO) {
-        return {
-            success: true,
-            username: "Administrador",
-            isDefault: true,
-            role: "Gerente"
-        };
+// Função para verificar o login padrão local
+function verificarAcessoPadrao(username, password) {
+    if (username.toLowerCase() === "luzdomundo" && password === SENHA_PADRAO) {
+        return { success: true, username: "Administrador", isDefault: true, role: "Gerente" };
     }
     return null;
 }
@@ -191,28 +185,36 @@ if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const usuario = document.getElementById("username").value.trim();
-        const senha = document.getElementById("password").value.trim();
+        // Captura dos elementos do formulário
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
         const errorBox = document.getElementById("login-error");
         const spinner = document.getElementById("loading-spinner");
         const botaoLogin = document.getElementById("login-button");
 
-        // Limpa mensagens e mostra carregamento
+        // Limpa mensagens e ativa o estado de carregamento
         errorBox.classList.add("hidden");
         spinner.classList.remove("hidden");
-        botaoLogin.disabled = true;
 
-        // 🧩 Verifica acesso padrão local
-        const acessoPadrao = verificarAcessoPadrao(usuario, senha);
+        if (botaoLogin) {
+            botaoLogin.disabled = true;
+            botaoLogin.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
+        }
+
+        // 🧩 Verifica login padrão local
+        const acessoPadrao = verificarAcessoPadrao(username, password);
         if (acessoPadrao && acessoPadrao.success) {
             spinner.classList.add("hidden");
-            botaoLogin.disabled = false;
+            if (botaoLogin) {
+                botaoLogin.disabled = false;
+                botaoLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Entrar';
+            }
 
             localStorage.setItem("loggedInUser", acessoPadrao.username);
             localStorage.setItem("userRole", acessoPadrao.role);
             localStorage.setItem("isDefaultUser", "true");
 
-            // Mostra mensagem de sucesso antes de redirecionar
+            // Mostra mensagem antes de redirecionar
             errorBox.textContent = "✅ Acesso autorizado como Administrador.";
             errorBox.style.color = "green";
             errorBox.classList.remove("hidden");
@@ -227,12 +229,16 @@ if (loginForm) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ username: usuario, password: senha })
+                body: JSON.stringify({ username, password })
             });
 
             const data = await res.json();
             spinner.classList.add("hidden");
-            botaoLogin.disabled = false;
+
+            if (botaoLogin) {
+                botaoLogin.disabled = false;
+                botaoLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Entrar';
+            }
 
             if (res.status === 401 || !data.success) {
                 errorBox.textContent = "❌ Usuário ou senha incorretos.";
@@ -262,7 +268,10 @@ if (loginForm) {
             }
         } catch (err) {
             spinner.classList.add("hidden");
-            botaoLogin.disabled = false;
+            if (botaoLogin) {
+                botaoLogin.disabled = false;
+                botaoLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Entrar';
+            }
             errorBox.textContent = "⚠️ Erro de conexão. Verifique sua internet.";
             errorBox.style.color = "orange";
             errorBox.classList.remove("hidden");
