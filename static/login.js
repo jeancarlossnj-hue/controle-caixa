@@ -205,3 +205,121 @@ if (loginForm) {
         }
     });
 }
+
+
+// ==========================================
+// ✏️ EDIÇÃO DE USUÁRIOS
+// ==========================================
+let usuarioEditandoId = null;
+
+// Abre o modal com os dados do usuário
+window.abrirModalEditar = function (id, usuario, senha, funcao) {
+    usuarioEditandoId = id;
+    document.getElementById("input-usuario").value = usuario;
+    document.getElementById("input-senha").value = senha;
+    document.getElementById("input-funcao").value = funcao;
+    document.getElementById("modal-editar").classList.remove("hidden");
+};
+
+// Fecha o modal sem salvar
+window.fecharModalEditar = function () {
+    document.getElementById("modal-editar").classList.add("hidden");
+    usuarioEditandoId = null;
+};
+
+// Salva as alterações no servidor
+window.salvarEdicao = async function (event) {
+    event.preventDefault();
+    if (!usuarioEditandoId) return alert("Usuário não selecionado!");
+
+    const usuario = document.getElementById("input-usuario").value.trim();
+    const senha = document.getElementById("input-senha").value.trim();
+    const funcao = document.getElementById("input-funcao").value.trim();
+
+    try {
+        const res = await fetch(`${API_BASE}/editar_usuarios/${usuarioEditandoId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                nome_usuario: usuario,
+                senha: senha,
+                funcao: funcao
+            })
+        });
+
+        const data = await res.json();
+        alert(data.message || "✅ Usuário atualizado com sucesso!");
+        window.fecharModalEditar();
+
+        // Recarrega a lista de usuários
+        fetch(`${API_BASE}/obter_logins`)
+            .then(response => response.json())
+            .then(logins => {
+                const tabela = document.getElementById("usuarios-table");
+                tabela.innerHTML = "";
+                logins.forEach(login => {
+                    const linha = document.createElement("tr");
+                    linha.innerHTML = `
+                        <td class="px-4 py-3">${login.usuario}</td>
+                        <td class="px-4 py-3">${login.senha}</td>
+                        <td class="px-4 py-3">${login.cargo}</td>
+                        <td class="px-4 py-3">
+                            <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded transition"
+                                onclick="abrirModalEditar(${login.id}, '${login.usuario}', '${login.senha}', '${login.cargo}')">
+                                Editar
+                            </button>
+                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
+                                onclick="excluirUsuario(${login.id})">
+                                Excluir
+                            </button>
+                        </td>`;
+                    tabela.appendChild(linha);
+                });
+            });
+    } catch (err) {
+        console.error("❌ Erro ao editar usuário:", err);
+        alert("Erro ao atualizar usuário.");
+    }
+};
+
+// ==========================================
+// 🗑️ EXCLUSÃO DE USUÁRIOS
+// ==========================================
+window.excluirUsuario = async function (id) {
+    if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/usuarios/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        alert(data.message || "Usuário excluído com sucesso!");
+
+        // Recarrega tabela
+        fetch(`${API_BASE}/obter_logins`)
+            .then(response => response.json())
+            .then(logins => {
+                const tabela = document.getElementById("usuarios-table");
+                tabela.innerHTML = "";
+                logins.forEach(login => {
+                    const linha = document.createElement("tr");
+                    linha.innerHTML = `
+                        <td class="px-4 py-3">${login.usuario}</td>
+                        <td class="px-4 py-3">${login.senha}</td>
+                        <td class="px-4 py-3">${login.cargo}</td>
+                        <td class="px-4 py-3">
+                            <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded transition"
+                                onclick="abrirModalEditar(${login.id}, '${login.usuario}', '${login.senha}', '${login.cargo}')">
+                                Editar
+                            </button>
+                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
+                                onclick="excluirUsuario(${login.id})">
+                                Excluir
+                            </button>
+                        </td>`;
+                    tabela.appendChild(linha);
+                });
+            });
+    } catch (err) {
+        console.error("❌ Erro ao excluir usuário:", err);
+        alert("Erro ao excluir usuário.");
+    }
+};
