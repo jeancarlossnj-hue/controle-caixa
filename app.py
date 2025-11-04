@@ -195,31 +195,30 @@ def atualizar_custo(id):
 @app.route('/obter_logins', methods=['GET'])
 def obter_logins():
     import traceback
+    import psycopg2.extras
+
     try:
         print("🟡 Iniciando leitura de usuários...")
         conn = get_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         print("🟢 Conexão estabelecida com sucesso!")
-        cur = conn.cursor()
 
-        # Detectar automaticamente colunas
-        cur.execute("SELECT * FROM usuarios LIMIT 1")
-        colunas = [desc[0] for desc in cur.description]
-        print("📋 Colunas encontradas:", colunas)
-
-        if "funcao" in colunas and "nome_usuario" in colunas:
-            query = "SELECT id, nome_usuario AS usuario, senha, funcao AS cargo FROM usuarios"
-        elif "cargo" in colunas and "usuario" in colunas:
-            query = "SELECT id, usuario, senha, cargo FROM usuarios"
-        else:
-            raise Exception(f"Tabela usuarios não contém colunas esperadas: {colunas}")
-
-        cur.execute(query)
+        cur.execute("SELECT id, nome_usuario, senha, funcao FROM usuarios")
         rows = cur.fetchall()
+        print(f"📋 {len(rows)} usuários encontrados.")
+
+        logins = []
+        for r in rows:
+            logins.append({
+                "id": r.get("id"),
+                "usuario": r.get("nome_usuario"),
+                "senha": r.get("senha"),
+                "cargo": r.get("funcao")
+            })
+
         cur.close()
         conn.close()
-
-        logins = [{"id": r[0], "usuario": r[1], "senha": r[2], "cargo": r[3]} for r in rows]
-        print(f"✅ {len(logins)} usuários retornados.")
+        print("✅ Logins retornados com sucesso.")
         return jsonify(logins)
 
     except Exception as e:
