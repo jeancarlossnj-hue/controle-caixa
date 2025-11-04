@@ -4,19 +4,16 @@
 const API_BASE = window.location.origin; // Detecta automaticamente (local ou Railway)
 
 document.addEventListener('DOMContentLoaded', function () {
-    // ==========================================
-    // 🧾 CADASTRO DE NOVOS USUÁRIOS
-    // ==========================================
     const form = document.getElementById('formulario-tarefas');
     if (form) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const registroUsuario = document.getElementById('registro-usuario').value;
-            const registroSenha = document.getElementById('registro-senha').value;
-            const registroFuncao = document.getElementById('registro-funcao').value;
+            // ✅ Corrigidos para coincidir com o HTML
+            const registroUsuario = document.getElementById('register-username').value.trim();
+            const registroSenha = document.getElementById('register-password').value.trim();
+            const registroFuncao = document.getElementById('user-role').value.trim();
 
-            // Buscar logins existentes
             fetch(`${API_BASE}/obter_logins`)
                 .then(response => response.json())
                 .then(logins => {
@@ -59,9 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ==========================================
-    // 📋 CARREGAR USUÁRIOS EXISTENTES
-    // ==========================================
+    // 🔄 Carregar logins existentes (sem mudanças)
     function carregarLogins() {
         fetch(`${API_BASE}/obter_logins`)
             .then(response => response.json())
@@ -92,82 +87,13 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => console.error("❌ Erro ao carregar usuários:", error));
     }
+
     carregarLogins();
+});
 
-    // ==========================================
-    // ✏️ EDIÇÃO DE USUÁRIOS
-    // ==========================================
-    let usuarioEditandoId = null;
 
-    window.abrirModalEditar = function (id, usuario, senha, funcao) {
-        usuarioEditandoId = id;
-        document.getElementById("input-usuario").value = usuario;
-        document.getElementById("input-senha").value = senha;
-        document.getElementById("input-funcao").value = funcao;
-        document.getElementById("modal-editar").classList.remove("hidden");
-    };
 
-    window.fecharModalEditar = function () {
-        document.getElementById("modal-editar").classList.add("hidden");
-        usuarioEditandoId = null;
-    };
-
-    window.salvarEdicao = function (event) {
-        event.preventDefault();
-
-        const usuario = document.getElementById("input-usuario").value.trim();
-        const senha = document.getElementById("input-senha").value.trim();
-        const funcao = document.getElementById("input-funcao").value;
-
-        fetch(`${API_BASE}/obter_logins`)
-            .then(response => response.json())
-            .then(logins => {
-                const usuarioDuplicado = logins.some(login =>
-                    login.usuario.toLowerCase() === usuario.toLowerCase() &&
-                    login.senha === senha &&
-                    login.id !== usuarioEditandoId
-                );
-
-                if (usuarioDuplicado) {
-                    alert("⚠️ Já existe outro usuário com este nome e senha.");
-                    return;
-                }
-
-                // Atualizar usuário
-                fetch(`${API_BASE}/editar_usuarios/${usuarioEditandoId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nome_usuario: usuario, senha, funcao })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);
-                        fecharModalEditar();
-                        carregarLogins();
-                    })
-                    .catch(error => console.error("Erro ao editar usuário:", error));
-            })
-            .catch(error => {
-                console.error("Erro ao verificar duplicidade:", error);
-                alert("Erro ao verificar duplicidade.");
-            });
-    };
-
-    // ==========================================
-    // 🗑️ EXCLUSÃO DE USUÁRIOS
-    // ==========================================
-    window.excluirUsuario = function (id) {
-        if (confirm("Tem certeza que deseja excluir este usuário?")) {
-            fetch(`${API_BASE}/usuarios/${id}`, { method: 'DELETE' })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    carregarLogins();
-                })
-                .catch(error => console.error("Erro ao excluir usuário:", error));
-        }
-    };
-});// ==========================================
+// ==========================================
 // 👤 LOGIN E LOGOUT
 // ==========================================
 const SENHA_PADRAO = "luzdomundo";
