@@ -227,26 +227,6 @@ def obter_logins():
         return jsonify({"erro": str(e)}), 500
 
 
-@app.route("/debug_select")
-def debug_select():
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM usuarios LIMIT 5")
-        dados = cur.fetchall()
-        colunas = [desc[0] for desc in cur.description]
-        cur.close()
-        conn.close()
-        return jsonify({
-            "colunas": colunas,
-            "dados": dados
-        })
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"erro": str(e)})
-
-
 
 # ===================================
 # 🔹 OBTER VENDAS
@@ -394,6 +374,60 @@ def init_db():
             "status": "erro",
             "mensagem": str(e)
         })
+
+@app.route('/editar_usuarios/<int:id>', methods=['PUT'])
+def editar_usuario(id):
+    import traceback
+    import psycopg2.extras
+    try:
+        data = request.get_json()
+        nome_usuario = data.get('nome_usuario')
+        senha = data.get('senha')
+        funcao = data.get('funcao')
+
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            UPDATE usuarios
+            SET nome_usuario = %s,
+                senha = %s,
+                funcao = %s
+            WHERE id = %s
+            RETURNING id;
+        """, (nome_usuario, senha, funcao, id))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "✅ Usuário atualizado com sucesso!"})
+
+    except Exception as e:
+        print("❌ Erro ao editar usuário:", e)
+        traceback.print_exc()
+        return jsonify({"erro": str(e)}), 500
+
+@app.route('/usuarios/<int:id>', methods=['DELETE'])
+def excluir_usuario(id):
+    import traceback
+    import psycopg2.extras
+    try:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("DELETE FROM usuarios WHERE id = %s RETURNING id;", (id,))
+        deleted = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        if deleted:
+            return jsonify({"message": "✅ Usuário excluído com sucesso!"})
+        else:
+            return jsonify({"message": "⚠️ Usuário não encontrado."}), 404
+
+    except Exception as e:
+        print("❌ Erro ao excluir usuário:", e)
+        traceback.print_exc()
+        return jsonify({"erro": str(e)}), 500
 
 
 # ===================================
