@@ -228,6 +228,27 @@ def obter_logins():
         return jsonify({"erro": str(e)}), 500
 
 
+@app.route("/debug_select")
+def debug_select():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM usuarios LIMIT 5")
+        dados = cur.fetchall()
+        colunas = [desc[0] for desc in cur.description]
+        cur.close()
+        conn.close()
+        return jsonify({
+            "colunas": colunas,
+            "dados": dados
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"erro": str(e)})
+
+
+
 # ===================================
 # 🔹 OBTER VENDAS
 # ===================================
