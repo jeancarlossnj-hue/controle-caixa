@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.message === 'Usuário registrado com sucesso.') {
                         alert('✅ Registro bem-sucedido!');
                         carregarLogins();
+                        location.reload();
                         form.reset();
 
                         // Fecha o modal após o alerta
