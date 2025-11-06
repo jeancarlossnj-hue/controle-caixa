@@ -284,23 +284,37 @@ def obter_vendedores():
 
 # ===================================
 # 🔹 REGISTRAR ASSISTÊNCIA
-
 @app.route('/registrar/assistencias', methods=['POST'])
 def registrar_assistencia():
     try:
         data = request.get_json()
+        print("📥 Dados recebidos da assistência:", data)
+
         conn = get_connection()
         cur = conn.cursor()
 
         cur.execute("""
             INSERT INTO assistencias (
-                nome_cliente, telefone_cliente, descricao_defeito, valor_servico,
-                forma_pagamento, garantia, nome_vendedor, data_registro
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                nome_cliente,
+                telefone_cliente,
+                marca_aparelho,
+                modelo_aparelho,
+                descricao_defeito,
+                servico_realizado,
+                valor_servico,
+                forma_pagamento,
+                garantia,
+                nome_vendedor,
+                data_registro
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())
         """, (
             data.get('nome_cliente'),
             data.get('telefone_cliente'),
+            data.get('marca_aparelho'),
+            data.get('modelo_aparelho'),
             data.get('descricao_defeito'),
+            data.get('servico_realizado'),
             data.get('valor_servico'),
             data.get('forma_pagamento'),
             data.get('garantia'),
@@ -311,10 +325,12 @@ def registrar_assistencia():
         cur.close()
         conn.close()
 
-        return jsonify({'message': '✅ Assistência registrada com sucesso!'})
+        print("✅ Assistência registrada com sucesso!")
+        return jsonify({'sucesso': True, 'mensagem': '✅ Assistência registrada com sucesso!'}), 200
+
     except Exception as e:
         print(f"❌ Erro ao registrar assistência: {e}")
-        return jsonify({'message': f'Erro: {e}'}), 500
+        return jsonify({'sucesso': False, 'mensagem': str(e)}), 500
 
 
 # ===================================
