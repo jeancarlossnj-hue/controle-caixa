@@ -250,6 +250,39 @@ def obter_vendas():
         return jsonify({"mensagem": f"Erro: {e}"}), 500
 
 
+
+
+# ===================================
+# 🔹 OBTER VENDEDORES (para selects e modais)
+# ===================================
+@app.route('/obter_vendedores', methods=['GET'])
+def obter_vendedores():
+    import traceback
+    import psycopg2.extras
+
+    try:
+        print("🟡 Buscando vendedores cadastrados...")
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Busca apenas o nome dos usuários cadastrados
+        cur.execute("SELECT nome_usuario FROM usuarios ORDER BY nome_usuario ASC")
+        rows = cur.fetchall()
+
+        vendedores = [r["nome_usuario"] for r in rows if r.get("nome_usuario")]
+
+        cur.close()
+        conn.close()
+        print(f"✅ {len(vendedores)} vendedores retornados.")
+        return jsonify(vendedores), 200
+
+    except Exception as e:
+        print("❌ Erro ao buscar vendedores:", e)
+        traceback.print_exc()
+        return jsonify({"erro": str(e)}), 500
+
+
+
 # ===================================
 # 🔹 CADASTRAR USUÁRIO
 # ===================================
