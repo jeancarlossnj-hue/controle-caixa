@@ -3,14 +3,14 @@
 // Controle de Saídas com integração Flask
 // ===========================================
 
-const API_URL = 'https://controle-caixa-production-b94c.up.railway.app';
+const API_SAIDAS = 'https://controle-caixa-production-b94c.up.railway.app';
 
 // Variável para controle de envio
 let saidaSendoEnviada = false;
 
 // Função para carregar todas as saídas do backend
 function carregarSaidas() {
-    fetch(API_URL)
+    fetch(API_SAIDAS)
         .then(res => res.json())
         .then(saidas => exibirSaidas(saidas))
         .catch(err => console.error("Erro ao carregar saídas:", err));
@@ -57,7 +57,7 @@ function adicionarSaida(motivo, valor, data, funcionario, callback) {
     if (saidaSendoEnviada) return;
     saidaSendoEnviada = true;
 
-    fetch(API_URL, {
+    fetch(API_SAIDAS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ motivo, valor, data, funcionario })
@@ -76,7 +76,7 @@ function adicionarSaida(motivo, valor, data, funcionario, callback) {
 
 // Função para buscar uma saída e abrir modal de edição
 function editarSaida(id) {
-    fetch(API_URL)
+    fetch(API_SAIDAS)
         .then(res => res.json())
         .then(saidas => {
             const saida = saidas.find(s => s.id === id);
@@ -110,7 +110,7 @@ function salvarEdicaoSaida(event) {
     const data = document.getElementById('edit-expense-date').value;
     const funcionario = document.getElementById('edit-expense-employee').value;
 
-    fetch(`${API_URL}/${id}`, {
+    fetch(`${API_SAIDAS}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ motivo, valor, data, funcionario })
@@ -126,7 +126,7 @@ function salvarEdicaoSaida(event) {
 // Excluir saída
 function excluirSaida(id) {
     if (confirm("Tem certeza que deseja excluir esta saída?")) {
-        fetch(`${API_URL}/${id}`, { method: "DELETE" })
+        fetch(`${API_SAIDAS}/${id}`, { method: "DELETE" })
             .then(res => res.json())
             .then(() => {
                 carregarSaidas();

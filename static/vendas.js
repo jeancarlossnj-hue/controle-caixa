@@ -1,5 +1,5 @@
 
-const API = 'https://controle-caixa-production-b94c.up.railway.app';
+const API_VENDAS = 'https://controle-caixa-production-b94c.up.railway.app';
 
 // ============================
 //  MODAL DETALHES VENDA - ATUALIZADO COM BOTÃO IMPRIMIR
@@ -267,7 +267,7 @@ function fecharModalDetalhesVenda() {
 //  CARREGAR VENDAS - CORRIGIDA
 // ============================
 function carregarVendas() {
-    fetch(`${API}/obter_vendas`)
+    fetch(`${API_VENDAS}/obter_vendas`)
         .then(response => response.json())
         .then(vendas => {
             const tabela = document.getElementById('transactions-table');
@@ -437,9 +437,9 @@ function registrarVenda() {
 // ============================
 async function salvarVendaNoBanco(dadosVenda) {
     try {
-        console.log("📤 Enviando dados para API...");
+        console.log("📤 Enviando dados para API_VENDAS...");
 
-        const response = await fetch(`${API}/registrar_venda`, {
+        const response = await fetch(`${API_VENDAS}/registrar_venda`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dadosVenda)
@@ -488,7 +488,7 @@ function salvarCusto() {
         return;
     }
 
-    fetch(`${API}/atualizar_custo/${vendaIdAtual}`, {
+    fetch(`${API_VENDAS}/atualizar_custo/${vendaIdAtual}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ custo: parseFloat(custo) })
@@ -673,7 +673,7 @@ function salvarEdicao() {
         nome_vendedor: vendedorSelecionado
     };
 
-    fetch(`${API}/editar_venda/${vendaIdEditando}`, {
+    fetch(`${API_VENDAS}/editar_venda/${vendaIdEditando}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
@@ -697,7 +697,7 @@ function fecharModalEditar() {
 function confirmarExclusao(botao, idVenda) {
     if (!confirm("Tem certeza que deseja excluir esta venda?")) return;
 
-    fetch(`${API}/excluir_venda/${idVenda}`, {
+    fetch(`${API_VENDAS}/excluir_venda/${idVenda}`, {
         method: 'DELETE'
     })
         .then(res => res.json())
@@ -715,7 +715,7 @@ function confirmarExclusao(botao, idVenda) {
 let tabvendedores = [];
 
 function carregarVendedores() {
-    return fetch(`${API}/obter_vendedores`)
+    return fetch(`${API_VENDAS}/obter_vendedores`)
         .then(response => response.json())
         .then(vendedores => {
             tabvendedores = vendedores;
@@ -1447,7 +1447,7 @@ function preencherFiltroVendedoresVendas() {
 function carregarVendas() {
 
 
-    fetch(`${API}/obter_vendas`)
+    fetch(`${API_VENDAS}/obter_vendas`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Erro ao carregar vendas: ' + response.status);

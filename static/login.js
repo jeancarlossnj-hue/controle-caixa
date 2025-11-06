@@ -1,7 +1,7 @@
 // ==========================================
 // 🌐 CONFIGURAÇÃO GERAL DE API
 // ==========================================
-const API_BASE ="https://controle-caixa-production-b94c.up.railway.app" ; // Detecta automaticamente (local ou Railway)
+const API_LOGIN ="https://controle-caixa-production-b94c.up.railway.app" ; // Detecta automaticamente (local ou Railway)
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('formulario-tarefas');
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const registroSenha = document.getElementById('register-password').value.trim();
             const registroFuncao = document.getElementById('user-role').value.trim();
 
-            fetch(`${API_BASE}/obter_logins`)
+            fetch(`${API_LOGIN}/obter_logins`)
                 .then(response => response.json())
                 .then(logins => {
                     const existeUsuarioRepetido = logins.some(login =>
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     // Registrar novo usuário
-                    return fetch(`${API_BASE}/registrar`, {
+                    return fetch(`${API_LOGIN}/registrar`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 🔄 Carregar logins existentes (sem mudanças)
     function carregarLogins() {
-        fetch(`${API_BASE}/obter_logins`)
+        fetch(`${API_LOGIN}/obter_logins`)
             .then(response => response.json())
             .then(logins => {
                 const tabela = document.getElementById("usuarios-table");
@@ -159,7 +159,7 @@ if (loginForm) {
 
         // 🔄 Caso não seja o login padrão, verifica no servidor
         try {
-            const res = await fetch(`${API_BASE}/login`, {
+            const res = await fetch(`${API_LOGIN}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -186,7 +186,7 @@ if (loginForm) {
                 localStorage.removeItem("isDefaultUser");
 
                 // Consulta cargo do usuário logado
-                const infoRes = await fetch(`${API_BASE}/verificar_cargo`, {
+                const infoRes = await fetch(`${API_LOGIN}/verificar_cargo`, {
                     method: "GET",
                     credentials: "include"
                 });
@@ -245,7 +245,7 @@ window.salvarEdicao = async function (event) {
     const funcao = document.getElementById("input-funcao").value.trim();
 
     try {
-        const res = await fetch(`${API_BASE}/editar_usuarios/${usuarioEditandoId}`, {
+        const res = await fetch(`${API_LOGIN}/editar_usuarios/${usuarioEditandoId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -260,7 +260,7 @@ window.salvarEdicao = async function (event) {
         window.fecharModalEditar();
 
         // Recarrega a lista de usuários
-        fetch(`${API_BASE}/obter_logins`)
+        fetch(`${API_LOGIN}/obter_logins`)
             .then(response => response.json())
             .then(logins => {
                 const tabela = document.getElementById("usuarios-table");
@@ -297,12 +297,12 @@ window.excluirUsuario = async function (id) {
     if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
 
     try {
-        const res = await fetch(`${API_BASE}/usuarios/${id}`, { method: "DELETE" });
+        const res = await fetch(`${API_LOGIN}/usuarios/${id}`, { method: "DELETE" });
         const data = await res.json();
         alert(data.message || "Usuário excluído com sucesso!");
 
         // Recarrega tabela
-        fetch(`${API_BASE}/obter_logins`)
+        fetch(`${API_LOGIN}/obter_logins`)
             .then(response => response.json())
             .then(logins => {
                 const tabela = document.getElementById("usuarios-table");
