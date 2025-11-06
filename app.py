@@ -282,6 +282,40 @@ def obter_vendedores():
         return jsonify({"erro": str(e)}), 500
 
 
+# ===================================
+# 🔹 REGISTRAR ASSISTÊNCIA
+
+@app.route('/registrar/assistencias', methods=['POST'])
+def registrar_assistencia():
+    try:
+        data = request.get_json()
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO assistencias (
+                nome_cliente, telefone_cliente, descricao_defeito, valor_servico,
+                forma_pagamento, garantia, nome_vendedor, data_registro
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+        """, (
+            data.get('nome_cliente'),
+            data.get('telefone_cliente'),
+            data.get('descricao_defeito'),
+            data.get('valor_servico'),
+            data.get('forma_pagamento'),
+            data.get('garantia'),
+            data.get('nome_vendedor')
+        ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({'message': '✅ Assistência registrada com sucesso!'})
+    except Exception as e:
+        print(f"❌ Erro ao registrar assistência: {e}")
+        return jsonify({'message': f'Erro: {e}'}), 500
+
 
 # ===================================
 # 🔹 CADASTRAR USUÁRIO
@@ -311,6 +345,8 @@ def registrar():
 
     except Exception as e:
         return jsonify({'message': f'Erro: {e}'}), 500
+    
+        
 
 # ===================================
 # 🔹 LOGIN DO USUÁRIO
