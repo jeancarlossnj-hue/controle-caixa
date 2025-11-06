@@ -3,7 +3,7 @@
 // Controle de Saídas com integração Flask
 // ===========================================
 
-const API_URL = "http://127.0.0.1:5000/api/saidas";
+const API_URL = 'https://controle-caixa-production-b94c.up.railway.app';
 
 // Variável para controle de envio
 let saidaSendoEnviada = false;

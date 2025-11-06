@@ -1,5 +1,5 @@
 
-
+const API = 'https://controle-caixa-production-b94c.up.railway.app';
 
 // ============================
 //  MODAL DETALHES VENDA - ATUALIZADO COM BOTÃO IMPRIMIR
@@ -30,7 +30,7 @@ function abrirModalDetalhes(botao) {
     if (dataCompra && dataCompra !== 'null' && dataCompra !== 'undefined' && dataCompra !== '' && dataCompra !== '-') {
         try {
             const data = new Date(dataCompra);
-            
+
             if (!isNaN(data.getTime())) {
                 dataCompraFormatada = data.toLocaleDateString('pt-BR');
                 horaCompraFormatada = data.toLocaleTimeString('pt-BR', {
@@ -41,7 +41,7 @@ function abrirModalDetalhes(botao) {
                 // Calcular validade da garantia se houver dias de garantia
                 if (garantiaDias && garantiaDias !== 'null' && garantiaDias !== 'undefined' && garantiaDias !== '') {
                     const dias = parseInt(garantiaDias);
-                    
+
                     if (!isNaN(dias) && dias > 0) {
                         const dataValidade = new Date(data);
                         dataValidade.setDate(dataValidade.getDate() + dias);
@@ -189,10 +189,10 @@ function abrirModalDetalhes(botao) {
 // ============================
 function imprimirCupomVenda(botao) {
     console.log("🖨️ Tentando imprimir cupom de venda...");
-    
+
     const detalhesDiv = document.getElementById("detalhes-venda-content");
     const dadosString = detalhesDiv.getAttribute('data-venda-detalhes');
-    
+
     if (!dadosString) {
         alert('Erro: Dados da venda não encontrados.');
         return;
@@ -201,7 +201,7 @@ function imprimirCupomVenda(botao) {
     try {
         const dadosVenda = JSON.parse(dadosString);
         dadosVenda.valor_total = parseFloat(dadosVenda.valor_total.replace('R$', '').replace(/\s/g, '').trim());
-        
+
         console.log("📊 Dados da venda:", dadosVenda);
         console.log("🔍 Verificando PDF Generator:", {
             pdfGenerator: !!window.pdfGenerator,
@@ -220,26 +220,26 @@ function imprimirCupomVenda(botao) {
         } else {
             // Se não estiver disponível, tentar carregar novamente
             console.warn("⚠️ PDF Generator não disponível, tentando recarregar...");
-            
+
             // Verificar se podemos carregar as bibliotecas manualmente
             if (typeof jsPDF === 'undefined') {
                 console.log("📥 jsPDF não carregado, tentando carregar...");
-                carregarBiblioteca('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', function() {
+                carregarBiblioteca('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', function () {
                     console.log("✅ jsPDF carregado, tentando novamente...");
                     setTimeout(() => imprimirCupomVenda(botao), 1000);
                 });
                 return;
             }
-            
+
             if (typeof html2canvas === 'undefined') {
                 console.log("📥 html2canvas não carregado, tentando carregar...");
-                carregarBiblioteca('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', function() {
+                carregarBiblioteca('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', function () {
                     console.log("✅ html2canvas carregado, tentando novamente...");
                     setTimeout(() => imprimirCupomVenda(botao), 1000);
                 });
                 return;
             }
-            
+
             alert('❌ Gerador de PDF não disponível. Recarregue a página e tente novamente.');
         }
     } catch (error) {
@@ -253,7 +253,7 @@ function carregarBiblioteca(url, callback) {
     const script = document.createElement('script');
     script.src = url;
     script.onload = callback;
-    script.onerror = function() {
+    script.onerror = function () {
         console.error('❌ Falha ao carregar: ' + url);
     };
     document.head.appendChild(script);
@@ -267,7 +267,7 @@ function fecharModalDetalhesVenda() {
 //  CARREGAR VENDAS - CORRIGIDA
 // ============================
 function carregarVendas() {
-    fetch('http://127.0.0.1:5000/obter_vendas')
+    fetch(`${API}/obter_vendas`)
         .then(response => response.json())
         .then(vendas => {
             const tabela = document.getElementById('transactions-table');
@@ -357,7 +357,7 @@ function inicializarFormularioVendas() {
 //  REGISTRAR VENDA - FLUXO CORRIGIDO (MESMO DA ASSISTÊNCIA)
 // ============================
 function registrarVenda() {
-    
+
     // Pega os campos principais
     const nomeCliente = document.getElementById('customer-name').value.trim();
     const telefoneCliente = document.getElementById('customer-phone').value.trim();
@@ -407,13 +407,13 @@ function registrarVenda() {
 
     // PRIMEIRO: Gerar o PDF (igual na assistência)
     if (window.pdfGenerator && window.pdfGenerator.abrirModalCupom) {
-        
+
         // Fecha o modal do formulário APENAS quando o PDF for gerado
         document.getElementById('sales-modal').classList.add('hidden');
 
         // Gera o PDF e só depois salva
         window.pdfGenerator.abrirModalCupom(dadosVenda, 'venda', async (resultado) => {
-            
+
             if (resultado !== 'fechar' && resultado !== 'erro') {
                 console.log("💾 Salvando venda no banco de dados...");
                 await salvarVendaNoBanco(dadosVenda);
@@ -439,7 +439,7 @@ async function salvarVendaNoBanco(dadosVenda) {
     try {
         console.log("📤 Enviando dados para API...");
 
-        const response = await fetch('http://127.0.0.1:5000/registrar_venda', {
+        const response = await fetch(`${API}/registrar_venda`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dadosVenda)
@@ -488,7 +488,7 @@ function salvarCusto() {
         return;
     }
 
-    fetch(`http://127.0.0.1:5000/atualizar_custo/${vendaIdAtual}`, {
+    fetch(`${API}/atualizar_custo/${vendaIdAtual}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ custo: parseFloat(custo) })
@@ -499,7 +499,7 @@ function salvarCusto() {
             fecharModalCusto();
             carregarVendas();
         })
-        .catch(err => console.error('Erro ao atualizar custo:', err));
+        .catch(err => console.error('❌ Erro ao atualizar custo:', err));
 }
 
 // ============================
@@ -673,7 +673,7 @@ function salvarEdicao() {
         nome_vendedor: vendedorSelecionado
     };
 
-    fetch(`http://127.0.0.1:5000/editar_venda/${vendaIdEditando}`, {
+    fetch(`${API}/editar_venda/${vendaIdEditando}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
@@ -697,7 +697,7 @@ function fecharModalEditar() {
 function confirmarExclusao(botao, idVenda) {
     if (!confirm("Tem certeza que deseja excluir esta venda?")) return;
 
-    fetch(`http://127.0.0.1:5000/excluir_venda/${idVenda}`, {
+    fetch(`${API}/excluir_venda/${idVenda}`, {
         method: 'DELETE'
     })
         .then(res => res.json())
@@ -715,7 +715,7 @@ function confirmarExclusao(botao, idVenda) {
 let tabvendedores = [];
 
 function carregarVendedores() {
-    return fetch('http://127.0.0.1:5000/obter_vendedores')
+    return fetch(`${API}/obter_vendedores`)
         .then(response => response.json())
         .then(vendedores => {
             tabvendedores = vendedores;
@@ -1017,11 +1017,11 @@ function configurarCamposPagamentoAssistencia() {
 //  INICIALIZAÇÃO - BLOCO ÚNICO (ATUALIZADO COM FILTROS)
 // ============================
 document.addEventListener('DOMContentLoaded', function () {
-    
+
 
     // 1. Inicializar formulário de vendas (APENAS UMA VEZ)
     inicializarFormularioVendas();
-    
+
     // 2. Inicializar vendedores nos modais
     if (typeof inicializarVendedoresNosModais === 'function') {
         inicializarVendedoresNosModais();
@@ -1031,23 +1031,23 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof configurarCamposPagamentoEdicao === 'function') {
         configurarCamposPagamentoEdicao();
     }
-    
+
     // 4. Configurar campos de pagamento combinado para vendas
     configurarCamposPagamentoVendas();
-    
+
     // 5. Configurar campos de pagamento combinado para assistência
     configurarCamposPagamentoAssistencia();
 
     // 6. Carregar dados específicos da página de vendas
     if (window.location.pathname.includes('tbvendas.html')) {
-        
+
         carregarVendedores().then(() => {
             carregarVendas(); // Esta função agora carrega e aplica filtros
         });
     }
 
     // 7. Carregar vendedores automaticamente na página principal
-    if (!window.location.pathname.includes('tbvendas.html') && 
+    if (!window.location.pathname.includes('tbvendas.html') &&
         !window.location.pathname.includes('tbassistencia.html')) {
         carregarVendedores();
     }
@@ -1066,10 +1066,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof verificarERestaurarModalPDF === 'function') {
         verificarERestaurarModalPDF();
     }
-    
+
     // 10. Inicializar filtros se estiver na página de vendas
     if (window.location.pathname.includes('tbvendas.html')) {
-        
+
         // As variáveis já foram definidas no escopo global
     }
 });
@@ -1091,7 +1091,7 @@ let filtrosAtivosVendas = {
 function toggleFiltros(tipo) {
     const painel = document.getElementById(`painel-filtros-${tipo}`);
     const icon = document.getElementById(`icon-filtro-${tipo}`);
-    
+
     if (painel.classList.contains('hidden')) {
         painel.classList.remove('hidden');
         icon.classList.add('rotate-180');
@@ -1104,7 +1104,7 @@ function toggleFiltros(tipo) {
 // Função para aplicar filtros nas vendas
 function aplicarFiltrosVendas() {
     console.log("Aplicando filtros de vendas...");
-    
+
     const filtroData = document.getElementById('filtro-data-vendas').value;
     const filtroNome = document.getElementById('filtro-nome-vendas').value.toLowerCase();
     const filtroVendedor = document.getElementById('filtro-vendedor-vendas').value;
@@ -1123,7 +1123,7 @@ function aplicarFiltrosVendas() {
 
 // Função para filtrar e atualizar a tabela de vendas
 function filtrarETableVendas() {
-    
+
     if (!todasVendas || todasVendas.length === 0) {
         console.log("Nenhuma venda carregada ainda. Carregando vendas...");
         carregarVendas();
@@ -1160,7 +1160,7 @@ function filtrarETableVendas() {
         if (filtrosAtivosVendas.status) {
             const isPendente = venda.custo_produto === '-' || venda.custo_produto === null || venda.custo_produto === '';
             console.log("Venda", venda.id, "é pendente?", isPendente);
-            
+
             if (filtrosAtivosVendas.status === 'pendente' && !isPendente) {
                 return false;
             }
@@ -1172,7 +1172,7 @@ function filtrarETableVendas() {
         return true;
     });
 
-    
+
     atualizarTabelaVendas(vendasFiltradas);
     atualizarFiltrosAtivosUI('vendas');
 }
@@ -1227,11 +1227,11 @@ function atualizarTabelaVendas(vendas) {
             <td class="px-4 py-3 whitespace-nowrap">${venda.nome_vendedor || '-'}</td>
             <td class="px-4 py-3 whitespace-nowrap">
                 ${(venda.custo_produto === '-' || !venda.custo_produto)
-                    ? `<button onclick="abrirModalCusto(this, ${venda.id})"
+                ? `<button onclick="abrirModalCusto(this, ${venda.id})"
                             class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition text-sm">
                         Pendente
                     </button>`
-                    : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold text-sm">Concluído</span>`}
+                : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold text-sm">Concluído</span>`}
             </td>
             <td class="px-4 py-3 space-x-2 whitespace-nowrap"
                 data-telefone="${venda.telefone_cliente || ''}"
@@ -1254,53 +1254,53 @@ function atualizarFiltrosAtivosUI(tipo) {
     const container = document.getElementById(`filtros-ativos-${tipo}`);
     const tagsContainer = document.getElementById(`tags-filtros-${tipo}`);
     const textoContador = document.getElementById(`texto-contador-${tipo}`);
-    
+
     if (!container || !tagsContainer || !textoContador) return;
-    
+
     const filtros = tipo === 'vendas' ? filtrosAtivosVendas : filtrosAtivosAssistencias;
     const dados = tipo === 'vendas' ? todasVendas : todasAssistencias;
-    
+
     // Limpar tags existentes
     tagsContainer.innerHTML = '';
-    
+
     // Criar tags para filtros ativos
     let filtrosCount = 0;
-    
+
     if (filtros.data) {
         criarTagFiltro(tagsContainer, `Data: ${formatarData(filtros.data)}`, tipo);
         filtrosCount++;
     }
-    
+
     if (filtros.nome) {
         criarTagFiltro(tagsContainer, `Nome: "${filtros.nome}"`, tipo);
         filtrosCount++;
     }
-    
+
     if (filtros.vendedor) {
         criarTagFiltro(tagsContainer, `Vendedor: ${filtros.vendedor}`, tipo);
         filtrosCount++;
     }
-    
+
     if (filtros.status) {
         const statusText = filtros.status === 'pendente' ? 'Pendentes' : 'Concluídos';
         criarTagFiltro(tagsContainer, `Status: ${statusText}`, tipo);
         filtrosCount++;
     }
-    
+
     // Mostrar/ocultar container de filtros ativos
     if (filtrosCount > 0) {
         container.classList.remove('hidden');
     } else {
         container.classList.add('hidden');
     }
-    
+
     // Atualizar texto do contador
     const total = dados.length;
-    const dadosFiltrados = tipo === 'vendas' ? 
-        todasVendas.filter(v => filtrarVenda(v, filtros)) : 
+    const dadosFiltrados = tipo === 'vendas' ?
+        todasVendas.filter(v => filtrarVenda(v, filtros)) :
         todasAssistencias.filter(a => filtrarAssistencia(a, filtros));
     const filtrados = dadosFiltrados.length;
-    
+
     if (filtrosCount > 0) {
         textoContador.textContent = `${filtrados} de ${total} vendas encontradas`;
         textoContador.className = 'text-sm text-blue-600 font-medium';
@@ -1308,7 +1308,7 @@ function atualizarFiltrosAtivosUI(tipo) {
         textoContador.textContent = `${total} vendas no total`;
         textoContador.className = 'text-sm text-gray-600';
     }
-    
+
     // Atualizar badge do contador
     const contador = document.getElementById(`contador-${tipo}`);
     if (contador) {
@@ -1351,10 +1351,10 @@ function filtrarVenda(venda, filtros) {
 function criarTagFiltro(container, texto, tipo) {
     const tag = document.createElement('div');
     tag.className = `bg-${tipo === 'vendas' ? 'blue' : 'orange'}-100 text-${tipo === 'vendas' ? 'blue' : 'orange'}-800 px-2 py-1 rounded-full text-xs font-medium flex items-center`;
-    
+
     const tipoFiltro = texto.split(':')[0].toLowerCase().trim();
     const valorFiltro = texto.split(':')[1] ? texto.split(':')[1].trim() : '';
-    
+
     tag.innerHTML = `
         ${texto}
         <button onclick="removerFiltro('${tipoFiltro}', '${tipo}')" 
@@ -1370,7 +1370,7 @@ function criarTagFiltro(container, texto, tipo) {
 // Função para remover filtro individual
 function removerFiltro(tipoFiltro, contexto) {
     const filtros = contexto === 'vendas' ? filtrosAtivosVendas : filtrosAtivosAssistencias;
-    
+
     switch (tipoFiltro) {
         case 'data':
             document.getElementById(`filtro-data-${contexto}`).value = '';
@@ -1389,7 +1389,7 @@ function removerFiltro(tipoFiltro, contexto) {
             filtros.status = '';
             break;
     }
-    
+
     // Reaplicar filtros
     if (contexto === 'vendas') {
         filtrarETableVendas();
@@ -1434,7 +1434,7 @@ function preencherFiltroVendedoresVendas() {
 
     // Adicionar vendedores únicos
     const vendedoresUnicos = [...new Set(todasVendas.map(v => v.nome_vendedor).filter(v => v && v !== '-' && v !== ''))];
-    
+
     vendedoresUnicos.forEach(vendedor => {
         const option = document.createElement('option');
         option.value = vendedor;
@@ -1445,9 +1445,9 @@ function preencherFiltroVendedoresVendas() {
 
 // MODIFICAR a função carregarVendas original para armazenar os dados
 function carregarVendas() {
-    
-    
-    fetch('http://127.0.0.1:5000/obter_vendas')
+
+
+    fetch(`${API}/obter_vendas`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Erro ao carregar vendas: ' + response.status);
@@ -1455,14 +1455,14 @@ function carregarVendas() {
             return response.json();
         })
         .then(vendas => {
-            
+
             todasVendas = vendas;
             preencherFiltroVendedoresVendas();
             filtrarETableVendas(); // Aplicar filtros após carregar
         })
         .catch(error => {
             console.error('Erro ao carregar vendas:', error);
-            
+
         });
 }
 

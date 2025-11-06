@@ -1,5 +1,5 @@
 
-const API = 'http://127.0.0.1:5000';
+const API = 'https://controle-caixa-production-b94c.up.railway.app';
 let filtroAtual = { tipo: 'hoje', dataInicio: null, dataFim: null };
 
 // Função para obter data no formato YYYY-MM-DD - CORRIGIDA
