@@ -1,3 +1,6 @@
+
+const API = 'https://controle-caixa-production-b94c.up.railway.app';
+
 // ============================
 //  VARIÁVEIS GLOBAIS - FILTROS
 // ============================
