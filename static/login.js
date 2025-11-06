@@ -1,7 +1,7 @@
 // ==========================================
 // 🌐 CONFIGURAÇÃO GERAL DE API
 // ==========================================
-const API_BASE = window.location.origin; // Detecta automaticamente (local ou Railway)
+const API_BASE ="https://controle-caixa-production-b94c.up.railway.app" ; // Detecta automaticamente (local ou Railway)
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('formulario-tarefas');
