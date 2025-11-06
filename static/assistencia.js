@@ -162,34 +162,21 @@ const servicesForm = document.getElementById('services-form');
 
 if (servicesForm) {
     servicesForm.addEventListener('submit', function (e) {
-        e.preventDefault(); // Impede reload
+        e.preventDefault();
         console.log("🟡 Iniciando cadastro de assistência...");
 
-        // ✅ Capturar vendedor selecionado
+        // ✅ Capturar vendedor
         const nomeVendedor = document.getElementById('vendedor-assistencia').value;
         if (!nomeVendedor) {
             alert("⚠️ Selecione o vendedor responsável pela assistência.");
             return;
         }
 
-        // COLETAR DADOS DO FORMULÁRIO
-        const nomeCliente = document.getElementById('service-customer-name').value.trim();
-        const telefoneCliente = document.getElementById('service-customer-phone').value.trim();
-        const marcaAparelho = document.getElementById('device-model').value.trim();
-        const modeloAparelho = document.getElementById('device-brand').value.trim();
-        const descricaoDefeito = document.getElementById('defect-description').value.trim();
-        const servicoRealizar = document.getElementById('service-description').value.trim();
-        const valorServico = parseFloat(document.getElementById('service-value').value) || 0;
-        const formaPagamento = document.getElementById('service2-payment-method').value;
-
-        // Garantia
+        // ✅ Garantia
         const garantiaRadio = document.querySelector('input[name="service-warranty"]:checked');
         const garantia = garantiaRadio ? garantiaRadio.value : '30';
 
-        console.log("📋 Dados capturados:");
-        console.log({ nomeCliente, telefoneCliente, marcaAparelho, modeloAparelho, descricaoDefeito, servicoRealizar, valorServico, formaPagamento, garantia, nomeVendedor });
-
-        // CHECKLIST
+        // ✅ Checklist (somente para registro visual)
         const checklist = {
             aparelho_liga: document.querySelector('input[name="liga"]:checked')?.value || 'nao',
             tela_quebrada: document.querySelector('input[name="tela"]:checked')?.value || 'nao',
@@ -203,25 +190,23 @@ if (servicesForm) {
             gaveta_sim: document.querySelector('input[name="gaveta_chip"]:checked')?.value || 'nao',
             com_capinha: document.querySelector('input[name="capinha"]:checked')?.value || 'nao'
         };
-
         console.log("🔍 Checklist capturado:", checklist);
 
-        // OBJETO FINAL DE DADOS
+        // ✅ OBJETO FINAL - compatível com o backend PostgreSQL
         const dadosAssistencia = {
-            nome_cliente: nomeCliente,
-            telefone_cliente: telefoneCliente,
-            marca_aparelho: marcaAparelho,
-            modelo_aparelho: modeloAparelho,
-            descricao_defeito: descricaoDefeito,
-            servico_realizar: servicoRealizar,
-            valor_servico: valorServico,
-            forma_pagamento: formaPagamento,
-            periodo_garantia: garantia,
-            checklist: checklist,
-            nome_vendedor: nomeVendedor // ✅ AGORA PEGA DO SELECT
+            nome_cliente: document.getElementById('service-customer-name').value,
+            telefone_cliente: document.getElementById('service-customer-phone').value,
+            marca_aparelho: document.getElementById('device-model').value,
+            modelo_aparelho: document.getElementById('device-brand').value,
+            descricao_defeito: document.getElementById('defect-description').value,
+            servico_realizado: document.getElementById('service-description').value,
+            valor_servico: parseFloat(document.getElementById('service-value').value) || 0,
+            forma_pagamento: document.getElementById('service2-payment-method').value, // ✅ adicionado
+            garantia: garantia,
+            nome_vendedor: nomeVendedor
         };
 
-        // ADICIONAR PAGAMENTO COMBINADO (se houver)
+        // ✅ Pagamento combinado
         const formaPagamentoValue = dadosAssistencia.forma_pagamento;
         if (formaPagamentoValue.includes('_')) {
             dadosAssistencia.valor_dinheiro = parseFloat(document.getElementById('service2-payment-part1').value) || 0;
@@ -241,14 +226,11 @@ if (servicesForm) {
 
         console.log("📄 Dados completos para PDF:", dadosAssistencia);
 
-        // PRIMEIRO: Gerar o PDF
+        // ✅ Primeiro gera o PDF, depois salva no banco
         if (window.pdfGenerator && window.pdfGenerator.abrirModalAssistencia) {
             console.log("🎬 Gerando PDF primeiro...");
-
-            // Fecha o modal do formulário
             document.getElementById('services-modal').classList.add('hidden');
 
-            // Gera o PDF e só depois salva
             window.pdfGenerator.abrirModalAssistencia(dadosAssistencia, async (resultado) => {
                 console.log("📄 PDF finalizado. Resultado:", resultado);
 
@@ -257,11 +239,9 @@ if (servicesForm) {
                     await salvarAssistenciaNoBanco(dadosAssistencia);
                 } else {
                     console.log("❌ PDF cancelado, não salvando no banco");
-                    // Reabre o modal caso o usuário cancele
                     document.getElementById('services-modal').classList.remove('hidden');
                 }
             });
-
         } else {
             console.error("❌ PDF Generator não disponível, salvando direto...");
             salvarAssistenciaNoBanco(dadosAssistencia);
@@ -369,56 +349,6 @@ async function gerarPDFAssistencia(dados) {
         console.error("Stack trace:", err.stack);
         alert("✅ Assistência salva! ⚠️ Erro ao gerar PDF: " + err.message);
     }
-}
-
-// ============================
-//  FUNÇÃO PARA RESETAR CHECKLIST
-// ============================
-function resetarChecklistAssistencia() {
-    console.log("🔄 Resetando checklist...");
-
-    // Resetar todos os radios
-    const radios = document.querySelectorAll('#services-form input[type="radio"]');
-    radios.forEach(radio => {
-        radio.checked = false;
-    });
-
-    // Marcar 'não' como padrão
-    const radiosNao = document.querySelectorAll('#services-form input[type="radio"][value="nao"]');
-    radiosNao.forEach(radio => {
-        radio.checked = true;
-    });
-
-    // Garantia padrão 30 dias
-    const garantia30 = document.querySelector('input[name="service-warranty"][value="30"]');
-    if (garantia30) garantia30.checked = true;
-
-    console.log("✅ Checklist resetado");
-}
-
-// ============================
-//  FUNÇÃO PARA RESETAR CHECKLIST - NOVA
-// ============================
-function resetarChecklist() {
-    console.log("🔄 Resetando checklist...");
-
-    // Resetar todos os radios para 'nao'
-    const radios = document.querySelectorAll('#services-form input[type="radio"]');
-    radios.forEach(radio => {
-        if (radio.value === 'nao') {
-            radio.checked = true;
-        } else {
-            radio.checked = false;
-        }
-    });
-
-    // Garantir que a garantia padrão (30 dias) esteja marcada
-    const garantia30 = document.querySelector('input[name="service-warranty"][value="30"]');
-    if (garantia30) {
-        garantia30.checked = true;
-    }
-
-    console.log("✅ Checklist resetado");
 }
 
 
