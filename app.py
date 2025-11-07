@@ -515,6 +515,58 @@ def excluir_usuario(id):
         return jsonify({"erro": str(e)}), 500
 
 
+
+
+
+# ✅ Substitua pela sua string de conexão real do Railway
+DATABASE_URL = "https://devicons.railway.app/i/postgresql.svg"
+
+def corrigir_forma_pagamento():
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        print("🔧 Verificando e corrigindo tipo da coluna 'forma_pagamento'...")
+
+        # Verifica se a coluna existe
+        cur.execute("""
+            SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_name = 'assistencias' AND column_name = 'forma_pagamento';
+        """)
+        coluna = cur.fetchone()
+
+        if not coluna:
+            print("🧩 Coluna não existe. Criando 'forma_pagamento' como TEXT...")
+            cur.execute("ALTER TABLE assistencias ADD COLUMN forma_pagamento TEXT;")
+
+        elif coluna[1] != 'text':
+            print(f"⚙️ Tipo atual: {coluna[1]}. Corrigindo para TEXT...")
+            cur.execute("""
+                ALTER TABLE assistencias
+                ALTER COLUMN forma_pagamento TYPE TEXT
+                USING forma_pagamento::text;
+            """)
+        else:
+            print("✅ A coluna 'forma_pagamento' já está correta (TEXT).")
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("✅ Correção concluída com sucesso!")
+
+    except Exception as e:
+        print("❌ Erro ao corrigir coluna:", e)
+
+# Executar a função
+if __name__ == "__main__":
+    corrigir_forma_pagamento()
+
+
+
+
+
+
 # ===================================
 # 🔹 EXECUÇÃO DO SERVIDOR
 # ===================================
