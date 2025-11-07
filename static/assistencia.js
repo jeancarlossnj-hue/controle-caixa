@@ -156,27 +156,33 @@ function filtrarAssistencia(assistencia, filtros) {
 }
 
 // ============================
-//  REGISTRAR ASSISTÊNCIA - COM VENDEDOR SELECIONÁVEL
+//  REGISTRAR ASSISTÊNCIA - COMPLETA E ATUALIZADA
 // ============================
 const servicesForm = document.getElementById('services-form');
 
 if (servicesForm) {
-    servicesForm.addEventListener('submit', function (e) {
+    servicesForm.addEventListener('submit', async function (e) {
         e.preventDefault();
         console.log("🟡 Iniciando cadastro de assistência...");
 
-        // ✅ Capturar vendedor
+        // ============================
+        // 1️⃣ CAPTURAR VENDEDOR
+        // ============================
         const nomeVendedor = document.getElementById('vendedor-assistencia').value;
         if (!nomeVendedor) {
             alert("⚠️ Selecione o vendedor responsável pela assistência.");
             return;
         }
 
-        // ✅ Garantia
+        // ============================
+        // 2️⃣ CAPTURAR GARANTIA
+        // ============================
         const garantiaRadio = document.querySelector('input[name="service-warranty"]:checked');
         const garantia = garantiaRadio ? garantiaRadio.value : '30';
 
-        // ✅ Checklist (somente para registro visual)
+        // ============================
+        // 3️⃣ CAPTURAR CHECKLIST (VISUAL)
+        // ============================
         const checklist = {
             aparelho_liga: document.querySelector('input[name="liga"]:checked')?.value || 'nao',
             tela_quebrada: document.querySelector('input[name="tela"]:checked')?.value || 'nao',
@@ -192,22 +198,43 @@ if (servicesForm) {
         };
         console.log("🔍 Checklist capturado:", checklist);
 
-        // ✅ OBJETO FINAL - compatível com o backend PostgreSQL
+        // ============================
+        // 4️⃣ MONTAR OBJETO PRINCIPAL
+        // ============================
         const dadosAssistencia = {
-            nome_cliente: document.getElementById('service-customer-name').value,
-            telefone_cliente: document.getElementById('service-customer-phone').value,
+            nome_cliente: document.getElementById('service-customer-name').value.trim(),
+            telefone_cliente: document.getElementById('service-customer-phone').value.trim(),
             marca_aparelho: document.getElementById('device-model').value,
-            modelo_aparelho: document.getElementById('device-brand').value,
-            descricao_defeito: document.getElementById('defect-description').value,
-            servico_realizado: document.getElementById('service-description').value,
+            modelo_aparelho: document.getElementById('device-brand').value.trim(),
+            descricao_defeito: document.getElementById('defect-description').value.trim(),
+            servico_realizado: document.getElementById('service-description').value.trim(),
             valor_servico: parseFloat(document.getElementById('service-value').value) || 0,
-            forma_pagamento: document.getElementById('service2-payment-method').value, // ✅ adicionado
+            forma_pagamento: document.getElementById('service2-payment-method').value,
             garantia: garantia,
             nome_vendedor: nomeVendedor
         };
 
-        // ✅ Pagamento combinado
+        // ============================
+        // 5️⃣ VALIDAÇÕES DE CAMPOS
+        // ============================
+        if (!dadosAssistencia.nome_cliente) {
+            alert("⚠️ Informe o nome do cliente.");
+            return;
+        }
+        if (!dadosAssistencia.forma_pagamento) {
+            alert("⚠️ Selecione a forma de pagamento.");
+            return;
+        }
+        if (!dadosAssistencia.valor_servico || isNaN(dadosAssistencia.valor_servico)) {
+            alert("⚠️ Informe um valor válido para o serviço.");
+            return;
+        }
+
+        // ============================
+        // 6️⃣ TRATAR PAGAMENTO COMBINADO
+        // ============================
         const formaPagamentoValue = dadosAssistencia.forma_pagamento;
+
         if (formaPagamentoValue.includes('_')) {
             dadosAssistencia.valor_dinheiro = parseFloat(document.getElementById('service2-payment-part1').value) || 0;
 
@@ -217,37 +244,46 @@ if (servicesForm) {
                 dadosAssistencia.valor_pix = parseFloat(document.getElementById('service2-payment-part2').value) || 0;
             }
 
-            console.log("💰 Pagamento combinado:", {
+            console.log("💰 Pagamento combinado detectado:", {
                 dinheiro: dadosAssistencia.valor_dinheiro,
                 cartao: dadosAssistencia.valor_cartao,
                 pix: dadosAssistencia.valor_pix
             });
         }
 
-        console.log("📄 Dados completos para PDF:", dadosAssistencia);
+        console.log("📄 Dados completos prontos para envio/PDF:", dadosAssistencia);
 
-        // ✅ Primeiro gera o PDF, depois salva no banco
-        if (window.pdfGenerator && window.pdfGenerator.abrirModalAssistencia) {
-            console.log("🎬 Gerando PDF primeiro...");
-            document.getElementById('services-modal').classList.add('hidden');
+        // ============================
+        // 7️⃣ GERAR PDF E SALVAR NO BANCO
+        // ============================
+        try {
+            if (window.pdfGenerator && window.pdfGenerator.abrirModalAssistencia) {
+                console.log("🎬 Gerando PDF...");
+                document.getElementById('services-modal').classList.add('hidden');
 
-            window.pdfGenerator.abrirModalAssistencia(dadosAssistencia, async (resultado) => {
-                console.log("📄 PDF finalizado. Resultado:", resultado);
+                // Gera o PDF e só depois salva no banco
+                window.pdfGenerator.abrirModalAssistencia(dadosAssistencia, async (resultado) => {
+                    console.log("📄 PDF finalizado. Resultado:", resultado);
 
-                if (resultado !== 'fechar' && resultado !== 'erro') {
-                    console.log("💾 Salvando assistência no banco de dados...");
-                    await salvarAssistenciaNoBanco(dadosAssistencia);
-                } else {
-                    console.log("❌ PDF cancelado, não salvando no banco");
-                    document.getElementById('services-modal').classList.remove('hidden');
-                }
-            });
-        } else {
-            console.error("❌ PDF Generator não disponível, salvando direto...");
-            salvarAssistenciaNoBanco(dadosAssistencia);
+                    if (resultado !== 'fechar' && resultado !== 'erro') {
+                        console.log("💾 Salvando assistência no banco de dados...");
+                        await salvarAssistenciaNoBanco(dadosAssistencia);
+                    } else {
+                        console.warn("❌ PDF cancelado, não salvando no banco.");
+                        document.getElementById('services-modal').classList.remove('hidden');
+                    }
+                });
+            } else {
+                console.warn("⚠️ PDF Generator não disponível — salvando direto no banco.");
+                await salvarAssistenciaNoBanco(dadosAssistencia);
+            }
+        } catch (err) {
+            console.error("❌ Erro inesperado ao gerar PDF:", err);
+            alert("❌ Ocorreu um erro ao gerar o PDF ou salvar a assistência.");
         }
     });
 }
+
 
 
 // ============================
