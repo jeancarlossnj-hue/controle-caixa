@@ -4,21 +4,21 @@
 function aguardarBibliotecasPDF(callback) {
     const maxTentativas = 10;
     let tentativas = 0;
-    
+
     function verificar() {
         tentativas++;
-        
+
         // Verificar se jspdf está disponível (pode ser jspdf ou jsPDF)
-        const jspdfDisponivel = typeof jspdf !== 'undefined' || 
-                                (window.jspdf && window.jspdf.jsPDF) || 
-                                typeof jsPDF !== 'undefined';
-        
+        const jspdfDisponivel = typeof jspdf !== 'undefined' ||
+            (window.jspdf && window.jspdf.jsPDF) ||
+            typeof jsPDF !== 'undefined';
+
         const html2canvasDisponivel = typeof html2canvas !== 'undefined';
-        
-    
-        
+
+
+
         if (jspdfDisponivel && html2canvasDisponivel) {
-            
+
             callback(true);
         } else if (tentativas >= maxTentativas) {
             console.error("❌ Timeout: Bibliotecas não carregadas após " + maxTentativas + " tentativas");
@@ -27,18 +27,18 @@ function aguardarBibliotecasPDF(callback) {
             setTimeout(verificar, 500);
         }
     }
-    
+
     verificar();
 }
 
 // Inicializar apenas quando as bibliotecas estiverem prontas
-aguardarBibliotecasPDF(function(sucesso) {
+aguardarBibliotecasPDF(function (sucesso) {
     if (!sucesso) {
         console.error("❌ PDF Generator não pode ser inicializado");
         return;
     }
-    
-    
+
+
     const pdfGenerator = {};
 
     // ======================================
@@ -149,12 +149,13 @@ aguardarBibliotecasPDF(function(sucesso) {
             year: 'numeric'
         });
 
-        const garantia = dados.periodo_garantia ? `${dados.periodo_garantia} dias` : '-';
+        // ✅ Correção: agora usa os nomes corretos vindos do assistencia.js
+        const garantia = dados.garantia ? `${dados.garantia} dias` : '-';
         const vendedor = dados.nome_vendedor || '-';
         const telefone = dados.telefone_cliente || '-';
         const aparelho = `${dados.marca_aparelho || ''} ${dados.modelo_aparelho || ''}`.trim();
         const defeito = dados.descricao_defeito || '-';
-        const servico = dados.servico_realizar || '-';
+        const servico = dados.servico_realizado || '-';
         const valor = (typeof dados.valor_servico !== 'undefined')
             ? Number(dados.valor_servico).toFixed(2)
             : '-';
@@ -173,7 +174,7 @@ aguardarBibliotecasPDF(function(sucesso) {
             return map[forma] || forma;
         }
 
-        // Traduzir checklist para texto legível
+        // ✅ Mantido igual: traduz o checklist
         function traduzirChecklist(checklist) {
             if (!checklist) return '';
 
@@ -193,102 +194,84 @@ aguardarBibliotecasPDF(function(sucesso) {
 
             let resultado = '';
             for (const [chave, valor] of Object.entries(checklist)) {
-                if (valor && valor !== 'nao') {
-                    const texto = traducoes[chave] || chave;
-                    const status = valor === 'sim' ? '✅' :
+                const texto = traducoes[chave] || chave;
+                const icone =
+                    valor === 'sim' ? '✅' :
                         valor === 'impossivel' ? '⚠️' : '❌';
-                    resultado += `${status} ${texto}\n`;
-                }
+                resultado += `${icone} ${texto}\n`;
             }
 
-            // ADICIONANDO OS CAMPOS COM VALOR "NÃO"
-            for (const [chave, valor] of Object.entries(checklist)) {
-                if (valor === 'nao') {
-                    const texto = traducoes[chave] || chave;
-                    resultado += `❌ ${texto}\n`;
-                }
-            }
-
-            return resultado || 'Nenhuma observação';
+            return resultado || 'Nenhum item informado';
         }
 
-        const checklistTexto = dados.checklist ? traduzirChecklist(dados.checklist) : '';
+        const checklistTexto = dados.checklist ? traduzirChecklist(dados.checklist) : 'Nenhum item informado';
 
         return `
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-<div id="__cupom_assistencia"
-     style="width:200px; font-family:'Roboto Mono', monospace; color:#000;
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <div id="__cupom_assistencia"
+      style="width:200px; font-family:'Roboto Mono', monospace; color:#000;
             padding:4px; font-size:8px; line-height:1.2; word-wrap:break-word;
             letter-spacing:0.2px;">
-
-    <!-- Cabeçalho -->
     <div style="text-align:center; margin-bottom:2px;">
-        <div style="font-weight:700; font-size:10px;">TECHSTORE</div>
-        <div style="font-size:7px; color:#333;">------------------------------------</div>
-        <div style="font-size:7px; margin-top:1px; letter-spacing:0.5px;">
-            CUPOM FISCAL - ASSISTÊNCIA TÉCNICA
-        </div>
-        <div style="font-size:7px; color:#333;">------------------------------------</div>
+      <div style="font-weight:700; font-size:10px;">TECHSTORE</div>
+      <div style="font-size:7px; color:#333;">------------------------------------</div>
+      <div style="font-size:7px; margin-top:1px; letter-spacing:0.5px;">
+        CUPOM FISCAL - ASSISTÊNCIA TÉCNICA
+      </div>
+      <div style="font-size:7px; color:#333;">------------------------------------</div>
     </div>
 
-    <!-- Informações do Cliente -->
     <div style="font-size:8px; margin-bottom:4px;">
-        <div><strong>CLIENTE:</strong> ${dados.nome_cliente || '-'}</div>
+      <div><strong>CLIENTE:</strong> ${dados.nome_cliente || '-'}</div>
+      <div><strong>TELEFONE:</strong> ${telefone}</div>
     </div>
 
-    <!-- Informações do Aparelho -->
     <div style="font-size:8px; margin-bottom:4px;">
-        <div><strong>APARELHO:</strong> ${aparelho}</div>
-        <div><strong>DEFEITO:</strong> ${defeito}</div>
-        <div><strong>SERVIÇO:</strong> ${servico}</div>
+      <div><strong>APARELHO:</strong> ${aparelho}</div>
+      <div><strong>DEFEITO:</strong> ${defeito}</div>
+      <div><strong>SERVIÇO:</strong> ${servico}</div>
     </div>
 
-    <!-- Checklist -->
     <div style="font-size:7px; margin-bottom:4px; background:#f5f5f5; padding:3px; border-radius:2px;">
-        <div style="font-weight:700; margin-bottom:1px;">CHECKLIST:</div>
-        <div style="white-space:pre-line;">${checklistTexto}</div>
+      <div style="font-weight:700; margin-bottom:1px;">CHECKLIST:</div>
+      <div style="white-space:pre-line;">${checklistTexto}</div>
     </div>
 
-    <!-- Valor -->
     <div style="margin-top:6px; border-top:1px dashed #000; border-bottom:1px dashed #000; padding:3px 0;">
-        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:9px;">
-            <span>VALOR DO SERVIÇO</span>
-            <span>R$ ${valor}</span>
-        </div>
+      <div style="display:flex; justify-content:space-between; font-weight:700; font-size:9px;">
+        <span>VALOR DO SERVIÇO</span>
+        <span>R$ ${valor}</span>
+      </div>
     </div>
 
-    <!-- Pagamento e Garantia -->
     <div style="margin-top:3px; font-size:7px;">
-        <div><strong>FORMA PAGAMENTO:</strong> ${traduzirForma(dados.forma_pagamento)}</div>
-        <div><strong>GARANTIA:</strong> ${garantia}</div>
-        <div><strong>VENDEDOR:</strong> ${vendedor}</div>
+      <div><strong>FORMA PAGAMENTO:</strong> ${traduzirForma(dados.forma_pagamento)}</div>
+      <div><strong>GARANTIA:</strong> ${garantia}</div>
+      <div><strong>VENDEDOR:</strong> ${vendedor}</div>
     </div>
 
     <div style="font-size:7px; color:#333; margin:4px 0;">------------------------------------</div>
 
-    <!-- Contato -->
     <div style="font-size:6px; margin-bottom:3px;">
-        <div><strong>TELEFONE:</strong> 31 99726-2119</div>
-        <div><strong>ENDEREÇO:</strong> Shopping Oiapoque - Portaria 2 - Box PI26/27</div>
+      <div><strong>TELEFONE:</strong> 31 99726-2119</div>
+      <div><strong>ENDEREÇO:</strong> Shopping Oiapoque - Portaria 2 - Box PI26/27</div>
     </div>
 
-    <!-- Rodapé -->
     <div style="font-size:6px; text-align:center;">
-        <div>EMITIDO: ${dataHora}</div>
-        <div style="font-weight:700; margin:2px 0;">OBRIGADO PELA CONFIANÇA!</div>
+      <div>EMITIDO: ${dataHora}</div>
+      <div style="font-weight:700; margin:2px 0;">OBRIGADO PELA CONFIANÇA!</div>
 
-        <div style="margin-top:3px; text-align:justify;">
-            CERTIFICAMOS QUE O APARELHO FOI RECEBIDO PARA ANÁLISE E REPARO. 
-            ESTA GARANTIA COBRE APENAS O SERVIÇO REALIZADO, EXCLUINDO 
-            DANOS CAUSADOS POR MAU USO, QUEDAS, OXIDAÇÃO OU INTERVENÇÕES 
-            NÃO AUTORIZADAS. ESTE DOCUMENTO É NECESSÁRIO PARA QUALQUER 
-            RECLAMAÇÃO OU REPARO DENTRO DO PRAZO DE GARANTIA.
-        </div>
+      <div style="margin-top:3px; text-align:justify;">
+        CERTIFICAMOS QUE O APARELHO FOI RECEBIDO PARA ANÁLISE E REPARO. 
+        ESTA GARANTIA COBRE APENAS O SERVIÇO REALIZADO, EXCLUINDO 
+        DANOS CAUSADOS POR MAU USO, QUEDAS, OXIDAÇÃO OU INTERVENÇÕES 
+        NÃO AUTORIZADAS. ESTE DOCUMENTO É NECESSÁRIO PARA QUALQUER 
+        RECLAMAÇÃO OU REPARO DENTRO DO PRAZO DE GARANTIA.
+      </div>
     </div>
-</div>
-`;
+  </div>`;
     }
+
 
     // ======================================
     // FUNÇÕES AUXILIARES
@@ -472,13 +455,13 @@ aguardarBibliotecasPDF(function(sucesso) {
     // ======================================
     pdfGenerator.abrirModalAssistencia = async function (dados, onClose = null) {
         console.log("🎬 Iniciando abrirModalAssistencia...");
-        
+
         // Verificar novamente no momento do uso
         if (typeof jspdf === 'undefined' && typeof jsPDF === 'undefined') {
             alert("❌ Biblioteca jsPDF não encontrada");
             return;
         }
-        
+
         if (typeof html2canvas === 'undefined') {
             alert("❌ Biblioteca html2canvas não encontrada");
             return;
@@ -553,13 +536,13 @@ aguardarBibliotecasPDF(function(sucesso) {
     // ======================================
     pdfGenerator.abrirModalCupom = async function (dados, tipo = 'venda', onClose = null) {
         console.log("🎬 Iniciando abrirModalCupom...");
-        
+
         // Verificar novamente no momento do uso
         if (typeof jspdf === 'undefined' && typeof jsPDF === 'undefined') {
             alert("❌ Biblioteca jsPDF não encontrada");
             return;
         }
-        
+
         if (typeof html2canvas === 'undefined') {
             alert("❌ Biblioteca html2canvas não encontrada");
             return;

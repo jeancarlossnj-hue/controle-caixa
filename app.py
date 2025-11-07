@@ -334,33 +334,6 @@ def registrar_assistencia():
 
 
 
-# ==========================================
-# 🔧 ROTA TEMPORÁRIA PARA AJUSTAR A TABELA
-# ==========================================
-@app.route("/ajustar_forma_pagamento", methods=["GET"])
-def ajustar_forma_pagamento():
-    try:
-        conn = get_connection()  # usa sua função de conexão existente
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            ALTER TABLE assistencias
-            ALTER COLUMN forma_pagamento TYPE TEXT
-            USING forma_pagamento::text;
-        """)
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"sucesso": True, "mensagem": "Coluna 'forma_pagamento' corrigida para TEXT!"})
-
-    except Exception as e:
-        import traceback
-        print("❌ ERRO AO AJUSTAR COLUNA:", e)
-        traceback.print_exc()
-        return jsonify({"sucesso": False, "erro": str(e)}), 500
-
-
 
 # ===================================
 # 🔹 CADASTRAR USUÁRIO
