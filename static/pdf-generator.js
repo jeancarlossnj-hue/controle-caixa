@@ -138,7 +138,7 @@ aguardarBibliotecasPDF(function (sucesso) {
 
     // ======================================
     // CUPOM DE ASSISTÊNCIA - CORRIGIDO
-    // ======================================
+    // =====================================
     function gerarHtmlAssistencia(dados) {
         const now = new Date();
         const dataHora = now.toLocaleString('pt-BR', {
@@ -149,7 +149,7 @@ aguardarBibliotecasPDF(function (sucesso) {
             year: 'numeric'
         });
 
-        // ✅ Correção: agora usa os nomes corretos vindos do assistencia.js
+        // ✅ Campos corrigidos conforme assistencia.js
         const garantia = dados.garantia ? `${dados.garantia} dias` : '-';
         const vendedor = dados.nome_vendedor || '-';
         const telefone = dados.telefone_cliente || '-';
@@ -158,8 +158,9 @@ aguardarBibliotecasPDF(function (sucesso) {
         const servico = dados.servico_realizado || '-';
         const valor = (typeof dados.valor_servico !== 'undefined')
             ? Number(dados.valor_servico).toFixed(2)
-            : '-';
+            : '0.00';
 
+        // ✅ Tradutor de formas de pagamento
         function traduzirForma(forma) {
             if (!forma) return '-';
             const map = {
@@ -174,7 +175,7 @@ aguardarBibliotecasPDF(function (sucesso) {
             return map[forma] || forma;
         }
 
-        // ✅ Mantido igual: traduz o checklist
+        // ✅ Tradução do checklist
         function traduzirChecklist(checklist) {
             if (!checklist) return '';
 
@@ -206,6 +207,7 @@ aguardarBibliotecasPDF(function (sucesso) {
 
         const checklistTexto = dados.checklist ? traduzirChecklist(dados.checklist) : 'Nenhum item informado';
 
+        // ✅ HTML completo do cupom
         return `
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
   <div id="__cupom_assistencia"
@@ -271,6 +273,7 @@ aguardarBibliotecasPDF(function (sucesso) {
     </div>
   </div>`;
     }
+
 
 
     // ======================================
