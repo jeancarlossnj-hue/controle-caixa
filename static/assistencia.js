@@ -214,6 +214,9 @@ if (servicesForm) {
             nome_vendedor: nomeVendedor
         };
 
+        dadosAssistencia.checklist = checklist;
+
+
         // ============================
         // 5️⃣ VALIDAÇÕES DE CAMPOS
         // ============================
