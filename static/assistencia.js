@@ -419,28 +419,27 @@ function carregarAssistencias() {
     fetch(`${API}/obter_assistencias`)
         .then(res => res.json())
         .then(assistencias => {
-            const tabela = document.getElementById("assistencias-table-body");
+            const tabela = document.getElementById("assistencias-table");
             tabela.innerHTML = "";
 
             assistencias.forEach(a => {
-                // Corrigir custo (remove $, R$, etc)
+                // Corrige custo com $ ou R$
                 const custoBruto = a.custo_servico ? a.custo_servico.toString().replace(/[^\d.,-]/g, '') : null;
                 const custoNumero = custoBruto ? parseFloat(custoBruto) : null;
                 const custoTexto = (custoNumero && !isNaN(custoNumero))
                     ? `R$ ${custoNumero.toFixed(2)}`
                     : "-";
 
-                // Status visual
                 const statusHTML = a.status === "pendente"
                     ? `<button onclick="abrirModalCustoAssistencia(${a.id})"
-                         class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">
-                         Pendente
-                       </button>`
+                        class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">
+                        Pendente
+                      </button>`
                     : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
 
-                // Linha da tabela
-                const linha = document.createElement("tr");
-                linha.innerHTML = `
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-gray-50";
+                tr.innerHTML = `
                     <td class="px-4 py-3">${a.nome_cliente || "-"}</td>
                     <td class="px-4 py-3">${a.telefone_cliente || "-"}</td>
                     <td class="px-4 py-3">${a.marca_aparelho || "-"}</td>
@@ -461,11 +460,12 @@ function carregarAssistencias() {
                             class="px-3 py-1 bg-red-100 border border-red-400 rounded text-red-800 hover:bg-red-200">Excluir</button>
                     </td>
                 `;
-                tabela.appendChild(linha);
+                tabela.appendChild(tr);
             });
         })
         .catch(err => console.error("❌ Erro ao carregar assistências:", err));
 }
+
 
 
 function salvarCustoAssistencia() {
@@ -897,42 +897,29 @@ function abrirModalEditarAssistencia(botao, idAssistencia) {
         return;
     }
 
-    assistenciaIdEditando = idAssistencia;
-    const linha = botao.closest("tr");
+    fetch(`${API}/obter_assistencias`)
+        .then(res => res.json())
+        .then(lista => {
+            const a = lista.find(x => x.id === idAssistencia);
+            if (!a) return alert("Assistência não encontrada!");
 
-    if (!linha) {
-        console.error("❌ Linha da assistência não encontrada!");
-        return;
-    }
+            const modal = document.getElementById("modal-editar-assistencia");
+            modal.classList.remove("hidden");
 
-    const modal = document.getElementById("modal-editar-assistencia");
-    modal.classList.remove("hidden");
-
-    // Preencher o modal com base na linha
-    const nomeCliente = linha.children[0].textContent.trim();
-    const telefoneCliente = linha.children[1].textContent.trim();
-    const marca = linha.children[2].textContent.trim();
-    const modelo = linha.children[3].textContent.trim();
-    const servico = linha.children[4].textContent.trim();
-    const pagamento = linha.children[5].textContent.trim();
-    const valor = linha.children[6].textContent.replace(/[^\d.,-]/g, '');
-    const custo = linha.children[7].textContent.replace(/[^\d.,-]/g, '');
-    const garantia = linha.children[8].textContent.trim();
-    const vendedor = linha.children[9].textContent.trim();
-
-    // Preenche os campos
-    document.getElementById("edit-assistencia-nome").value = nomeCliente;
-    document.getElementById("edit-assistencia-telefone").value = telefoneCliente;
-    document.getElementById("edit-assistencia-marca").value = marca;
-    document.getElementById("edit-assistencia-modelo").value = modelo;
-    document.getElementById("edit-assistencia-servico").value = servico;
-    document.getElementById("edit-assistencia-pagamento").value = pagamento;
-    document.getElementById("edit-assistencia-valor").value = valor;
-    document.getElementById("edit-assistencia-custo").value = custo;
-    document.getElementById("edit-assistencia-garantia").value = garantia;
-    document.getElementById("edit-assistencia-vendedor").value = vendedor;
+            document.getElementById("edit-assistencia-nome").value = a.nome_cliente || "";
+            document.getElementById("edit-assistencia-telefone").value = a.telefone_cliente || "";
+            document.getElementById("edit-assistencia-marca").value = a.marca_aparelho || "";
+            document.getElementById("edit-assistencia-modelo").value = a.modelo_aparelho || "";
+            document.getElementById("edit-assistencia-defeito").value = a.descricao_defeito || "";
+            document.getElementById("edit-assistencia-servico").value = a.servico_realizado || "";
+            document.getElementById("edit-assistencia-valor").value = a.valor_servico || "";
+            document.getElementById("edit-assistencia-pagamento").value = a.forma_pagamento || "";
+            document.getElementById("edit-assistencia-garantia").value = a.garantia || "30";
+            document.getElementById("edit-assistencia-custo").value = a.custo_servico ? a.custo_servico.replace(/[^\d.,-]/g, '') : "";
+            document.getElementById("edit-assistencia-vendedor").value = a.nome_vendedor || "";
+        })
+        .catch(err => console.error("❌ Erro ao carregar dados para edição:", err));
 }
-
 
 function verDetalhesAssistencia(id) {
     fetch(`${API}/obter_assistencias`)
@@ -949,16 +936,23 @@ function verDetalhesAssistencia(id) {
                 <p><b>Modelo:</b> ${a.modelo_aparelho}</p>
                 <p><b>Defeito:</b> ${a.descricao_defeito}</p>
                 <p><b>Serviço:</b> ${a.servico_realizado}</p>
+                <p><b>Forma de Pagamento:</b> ${a.forma_pagamento}</p>
                 <p><b>Valor:</b> R$ ${parseFloat(a.valor_servico).toFixed(2)}</p>
-                <p><b>Custo:</b> ${a.custo_servico || '-'}</p>
-                <p><b>Forma de pagamento:</b> ${a.forma_pagamento}</p>
-                <p><b>Garantia:</b> ${a.garantia} dias</p>
-                <p><b>Vendedor:</b> ${a.nome_vendedor}</p>
+                <p><b>Custo:</b> ${a.custo_servico || "-"}</p>
+                <p><b>Garantia:</b> ${a.garantia || "-"}</p>
+                <p><b>Vendedor:</b> ${a.nome_vendedor || "-"}</p>
                 <p><b>Status:</b> ${a.status}</p>
             `;
             document.getElementById("modal-detalhes-assistencia").classList.remove("hidden");
         });
 }
+
+function fecharModalDetalhesAssistencia() {
+    document.getElementById("modal-detalhes-assistencia").classList.add("hidden");
+}
+
+
+
 
 function fecharModalDetalhesAssistencia() {
     document.getElementById("modal-detalhes-assistencia").classList.add("hidden");
