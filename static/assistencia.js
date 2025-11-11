@@ -423,62 +423,76 @@ function carregarAssistencias() {
             tabela.innerHTML = "";
 
             assistencias.forEach(a => {
+                // 🔹 Corrigir formatação de custo
                 const custoBruto = a.custo_servico ? a.custo_servico.toString().replace(/[^\d.,-]/g, '') : null;
                 const custoNum = custoBruto ? parseFloat(custoBruto.replace(',', '.')) : null;
                 const custoTexto = (custoNum || custoNum === 0) && !isNaN(custoNum)
                     ? `R$ ${custoNum.toFixed(2)}`
                     : "-";
 
+                // 🔹 Corrigir formatação do valor
                 const valorTexto = a.valor_servico != null && !isNaN(parseFloat(a.valor_servico))
                     ? `R$ ${parseFloat(a.valor_servico).toFixed(2)}`
                     : "-";
 
-                const statusPendente = !a.custo_servico || a.status === 'pendente';
+                // 🔹 Status visual
+                const statusPendente = !a.custo_servico || a.status === "pendente";
                 const statusHTML = statusPendente
                     ? `<button onclick="abrirModalCustoAssistencia(${a.id})"
                 class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">
                 Pendente
-            </button>`
+             </button>`
                     : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
 
+                // 🔹 Criar linha da tabela
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-gray-50";
                 tr.innerHTML = `
-            <td class="px-4 py-3">${a.nome_cliente || "-"}</td>
-            <td class="px-4 py-3">${a.telefone_cliente || "-"}</td>
-            <td class="px-4 py-3">${a.marca_aparelho || "-"}</td>
-            <td class="px-4 py-3">${a.modelo_aparelho || "-"}</td>
-            <td class="px-4 py-3">${a.servico_realizado || "-"}</td>
-            <td class="px-4 py-3">${a.forma_pagamento || "-"}</td>
-            <td class="px-4 py-3">${valorTexto}</td>
-            <td class="px-4 py-3">${custoTexto}</td>
-            <td class="px-4 py-3">${a.garantia || "-"}</td>
-            <td class="px-4 py-3">${a.nome_vendedor || "-"}</td>
-            <td class="px-4 py-3">${statusHTML}</td>
-            <t  d class="px-4 py-3 flex gap-2" 
-                data-id="${a.id}"
-                data-cliente="${a.nome_cliente || '-'}"
-                data-telefone="${a.telefone_cliente || '-'}"
-                data-marca="${a.marca_aparelho || '-'}"
-                data-modelo="${a.modelo_aparelho || '-'}"
-                data-servico="${a.servico_realizado || '-'}"
-                data-forma="${a.forma_pagamento || '-'}"
-                data-valor="${valorTexto}"
-                data-custo="${custoTexto}"
-                data-vendedor="${a.nome_vendedor || '-'}"
-                data-garantia="${a.garantia || '-'}"
-                data-status="${a.status || '-'}"
-                data-data="${a.data_registro || '-'}">
-                <button onclick="verDetalhesAssistencia(this)" class="px-3 py-1 bg-gray-100 border border-gray-400    rounded text-gray-800 hover:bg-gray-200">Ver</button>
-                <button onclick="abrirModalEditarAssistencia(${a.id})" class="px-3 py-1 bg-blue-100 border    border-blue-400 rounded text-blue-800 hover:bg-blue-200">Editar</button>
-                <button onclick="excluirAssistencia(${a.id})" class="px-3 py-1 bg-red-100 border border-red-400   rounded text-red-800 hover:bg-red-200">Excluir</button>
-            </td>
+          <td class="px-4 py-3">${a.nome_cliente || "-"}</td>
+          <td class="px-4 py-3">${a.marca_aparelho || "-"}</td>
+          <td class="px-4 py-3">${a.modelo_aparelho || "-"}</td>
+          <td class="px-4 py-3">${a.servico_realizado || "-"}</td>
+          <td class="px-4 py-3">${a.forma_pagamento || "-"}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-right">${valorTexto}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-right">${custoTexto}</td>
+          <td class="px-4 py-3">${a.nome_vendedor || "-"}</td>
+          <td class="px-4 py-3">${statusHTML}</td>
+
+          <td class="px-4 py-3 flex gap-2"
+              data-id="${a.id}"
+              data-cliente="${a.nome_cliente || '-'}"
+              data-marca="${a.marca_aparelho || '-'}"
+              data-modelo="${a.modelo_aparelho || '-'}"
+              data-servico="${a.servico_realizado || '-'}"
+              data-forma="${a.forma_pagamento || '-'}"
+              data-valor="${valorTexto}"
+              data-custo="${custoTexto}"
+              data-vendedor="${a.nome_vendedor || '-'}"
+              data-status="${a.status || '-'}"
+              data-data="${a.data_registro || '-'}">
+
+              <button onclick="verDetalhesAssistencia(this)"
+                class="px-3 py-1 bg-gray-100 border border-gray-400 rounded text-gray-800 hover:bg-gray-200">
+                Ver
+              </button>
+
+              <button onclick="abrirModalEditarAssistencia(${a.id})"
+                class="px-3 py-1 bg-blue-100 border border-blue-400 rounded text-blue-800 hover:bg-blue-200">
+                Editar
+              </button>
+
+              <button onclick="excluirAssistencia(${a.id})"
+                class="px-3 py-1 bg-red-100 border border-red-400 rounded text-red-800 hover:bg-red-200">
+                Excluir
+              </button>
+          </td>
         `;
                 tabela.appendChild(tr);
             });
         })
         .catch(err => console.error("❌ Erro ao carregar assistências:", err));
 }
+
 
 
 
@@ -938,38 +952,39 @@ function abrirModalEditarAssistencia(botao, idAssistencia) {
 
 
 function verDetalhesAssistencia(botao) {
-    const celula = botao.closest("td");
+    const tr = botao.closest("tr");
+    if (!tr) return alert("❌ Linha não encontrada.");
+
+    // Busca os dados diretamente das células
+    const colunas = tr.querySelectorAll("td");
     const dados = {
-        nome: celula.dataset.cliente,
-        telefone: celula.dataset.telefone,
-        marca: celula.dataset.marca,
-        modelo: celula.dataset.modelo,
-        servico: celula.dataset.servico,
-        forma: celula.dataset.forma,
-        valor: celula.dataset.valor,
-        custo: celula.dataset.custo,
-        garantia: celula.dataset.garantia,
-        vendedor: celula.dataset.vendedor,
-        status: celula.dataset.status,
-        data: celula.dataset.data
+        cliente: colunas[0]?.textContent.trim() || "-",
+        marca: colunas[1]?.textContent.trim() || "-",
+        modelo: colunas[2]?.textContent.trim() || "-",
+        servico: colunas[3]?.textContent.trim() || "-",
+        forma_pagamento: colunas[4]?.textContent.trim() || "-",
+        valor: colunas[5]?.textContent.trim() || "-",
+        custo: colunas[6]?.textContent.trim() || "-",
+        vendedor: colunas[7]?.textContent.trim() || "-",
+        status: colunas[8]?.textContent.trim() || "-"
     };
 
+    // Monta o conteúdo do modal
     const div = document.getElementById("conteudo-detalhes-assistencia");
     div.innerHTML = `
-    <p><b>Cliente:</b> ${dados.nome}</p>
-    <p><b>Telefone:</b> ${dados.telefone}</p>
-    <p><b>Marca/Modelo:</b> ${dados.marca} / ${dados.modelo}</p>
+    <p><b>Cliente:</b> ${dados.cliente}</p>
+    <p><b>Marca:</b> ${dados.marca}</p>
+    <p><b>Modelo:</b> ${dados.modelo}</p>
     <p><b>Serviço:</b> ${dados.servico}</p>
-    <p><b>Forma de Pagamento:</b> ${dados.forma}</p>
+    <p><b>Pagamento:</b> ${dados.forma_pagamento}</p>
     <p><b>Valor:</b> ${dados.valor}</p>
     <p><b>Custo:</b> ${dados.custo}</p>
-    <p><b>Garantia:</b> ${dados.garantia}</p>
     <p><b>Vendedor:</b> ${dados.vendedor}</p>
     <p><b>Status:</b> ${dados.status}</p>
-    <p><b>Data:</b> ${dados.data}</p>
     `;
     document.getElementById("modal-detalhes-assistencia").classList.remove("hidden");
 }
+
 
 function fecharModalDetalhesAssistencia() {
     document.getElementById("modal-detalhes-assistencia").classList.add("hidden");
