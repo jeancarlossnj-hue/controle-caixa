@@ -359,9 +359,8 @@ def registrar_assistencia():
             INSERT INTO assistencias (
                 nome_cliente, telefone_cliente, marca_aparelho, modelo_aparelho,
                 descricao_defeito, servico_realizado, valor_servico, forma_pagamento,
-                garantia, nome_vendedor, custo_servico, status, data_registro
-            )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NULL,'pendente',NOW())
+                garantia, nome_vendedor, status, data_registro
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pendente', NOW())
         """, (
             data.get('nome_cliente'),
             data.get('telefone_cliente'),
@@ -376,13 +375,11 @@ def registrar_assistencia():
         ))
 
         conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({'mensagem': 'Assistência registrada como pendente!'}), 200
-
+        cur.close(); conn.close()
+        return jsonify({'sucesso': True, 'mensagem': 'Assistência registrada (pendente).'}), 200
     except Exception as e:
         print(f"❌ Erro ao registrar assistência: {e}")
-        return jsonify({'mensagem': f'Erro: {e}'}), 500
+        return jsonify({'sucesso': False, 'mensagem': str(e)}), 500
 
 
 # ===================================
@@ -419,19 +416,17 @@ def atualizar_custo_assistencia(id):
     try:
         data = request.get_json()
         custo = data.get('custo_servico')
-        conn = get_connection()
-        cur = conn.cursor()
+        conn = get_connection(); cur = conn.cursor()
         cur.execute("""
             UPDATE assistencias
-            SET custo_servico = %s, status = 'concluido'
-            WHERE id = %s
+                SET custo_servico = %s,
+                    status = 'concluido'
+                WHERE id = %s
         """, (custo, id))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({'mensagem': 'Custo atualizado com sucesso!'}), 200
+        conn.commit(); cur.close(); conn.close()
+        return jsonify({'mensagem': 'Custo salvo. Assistência concluída!'}), 200
     except Exception as e:
-        print(f"❌ Erro ao atualizar custo: {e}")
+        print("❌ Erro ao atualizar custo:", e)
         return jsonify({'mensagem': f'Erro: {e}'}), 500
 
 

@@ -432,7 +432,11 @@ function carregarAssistencias() {
                     ? `<button onclick="abrirModalCustoAssistencia(this, ${a.id})" class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">Pendente</button>`
                     : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
 
-                const custoTexto = a.custo_servico ? `R$ ${parseFloat(a.custo_servico).toFixed(2)}` : "-";
+
+                const custoTexto = (!a.custo_servico || isNaN(parseFloat(a.custo_servico)))
+                    ? '-'
+                    : `R$ ${parseFloat(a.custo_servico).toFixed(2)}`;
+
 
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-gray-50";
@@ -446,7 +450,11 @@ function carregarAssistencias() {
                     <td class="px-4 py-3 whitespace-nowrap">${a.nome_vendedor}</td>
                     <td class="px-4 py-3 whitespace-nowrap">${statusHTML}</td>
                     <td class="px-4 py-3 whitespace-nowrap space-x-2">
-                        <button onclick="abrirModalEditarAssistencia(${a.id})" class="px-3 py-1 bg-blue-100 border border-blue-400 rounded text-blue-800 hover:bg-blue-200">Editar</button>
+                        <button onclick="abrirModalEditarAssistencia(this, ${a.id})" 
+                            class="px-3 py-1 bg-blue-100 border border-blue-400 rounded text-blue-800           hover:bg-blue-200">
+                            Editar
+                        </button>
+
                         <button onclick="confirmarExclusaoAssistencia(${a.id})" class="px-3 py-1 bg-red-100 border border-red-400 rounded text-red-800 hover:bg-red-200">Excluir</button>
                     </td>`;
                 tabela.appendChild(tr);
@@ -878,113 +886,31 @@ function fecharModalCustoAssistencia() {
 // ============================
 //  ABRIR MODAL EDITAR ASSISTÊNCIA (CORRIGIDO)
 // ============================
-function abrirModalEditarAssistencia(botao, idAssistencia) {
-    const cargo = localStorage.getItem("userRole") || "Funcionario";
-    if (cargo !== "Gerente") {
-        alert("❌ Apenas gerentes podem editar assistências!");
+function abrirModalEditarAssistencia(botao, id) {
+    // agora "botao" é o próprio elemento HTML <button>
+    const linha = botao.closest('tr'); // pega a linha da tabela onde o botão está
+
+    if (!linha) {
+        console.error("❌ Linha da tabela não encontrada para edição.");
         return;
     }
-    assistenciaIdEditando = idAssistencia; // CORREÇÃO: usar a variável correta
-    const linha = botao.closest("tr");
-    const celulaAcoes = linha.querySelector("td:last-child");
 
-    console.log("=== DEBUG EDITAR ASSISTÊNCIA ===");
-    console.log("ID da Assistência:", idAssistencia);
-    console.log("Linha:", linha);
-    console.log("Célula Ações:", celulaAcoes);
+    // Aqui você pode acessar os dados da linha para preencher o modal:
+    const nomeCliente = linha.cells[0].textContent;
+    const modelo = linha.cells[1].textContent;
+    const defeito = linha.cells[2].textContent;
+    const valorServico = linha.cells[4].textContent.replace('R$', '').trim();
 
-    // Recuperar dados das células da tabela
-    const nomeCliente = linha.children[0].textContent;
-    const telefoneCliente = linha.children[1].textContent;
-    const marcaAparelho = linha.children[2].textContent;
-    const modeloAparelho = linha.children[3].textContent;
-    const formaPagamento = linha.children[4].textContent;
-    const valorServico = linha.children[5].textContent.replace("R$ ", "");
-    const custoServico = linha.children[6].textContent;
+    // Exemplo de preenchimento de modal
+    document.getElementById('editar-nome-cliente').value = nomeCliente;
+    document.getElementById('editar-modelo').value = modelo;
+    document.getElementById('editar-defeito').value = defeito;
+    document.getElementById('editar-valor').value = valorServico;
 
-    console.log("Dados recuperados da tabela:", {
-        nomeCliente,
-        telefoneCliente,
-        marcaAparelho,
-        modeloAparelho,
-        formaPagamento,
-        valorServico,
-        custoServico
-    });
-
-    // Preenche os campos básicos (CORRIGIDO: IDs atualizados)
-    document.getElementById("edit-assistencia-nome").value = nomeCliente;
-    document.getElementById("edit-assistencia-telefone").value = telefoneCliente;
-    document.getElementById("edit-assistencia-marca").value = marcaAparelho;
-    document.getElementById("edit-assistencia-modelo").value = modeloAparelho;
-    document.getElementById("edit-assistencia-valor").value = parseFloat(valorServico) || "";
-
-    // Recuperar dados dos atributos
-    const telefoneData = celulaAcoes.getAttribute("data-telefone");
-    const formaPagamentoData = celulaAcoes.getAttribute("data-pagamento");
-    const garantiaData = celulaAcoes.getAttribute("data-garantia");
-    const vendedorData = celulaAcoes.getAttribute("data-vendedor");
-
-    console.log("Dados dos atributos:", {
-        telefoneData,
-        formaPagamentoData,
-        garantiaData,
-        vendedorData
-    });
-
-    // Preencher outros campos
-    if (telefoneData && telefoneData !== 'null') {
-        document.getElementById("edit-assistencia-telefone").value = telefoneData;
-    }
-
-    // Configurar forma de pagamento
-    const selectPagamento = document.getElementById("edit-assistencia-pagamento");
-    if (formaPagamentoData) {
-        // Converter texto para valor (ex: "Dinheiro" -> "cash")
-        const pagamentoMap = {
-            'Dinheiro': 'cash',
-            'Cartão': 'card',
-            'Pix': 'pix',
-            'Vale': 'voucher',
-            'Dinheiro + Cartão': 'cash_card',
-            'Dinheiro + Pix': 'cash_pix',
-            'Cartão + Pix': 'card_pix'
-        };
-        selectPagamento.value = pagamentoMap[formaPagamentoData] || formaPagamentoData;
-    } else {
-        selectPagamento.value = "cash";
-    }
-
-    // Preencher custo
-    const custo = celulaAcoes.getAttribute("data-custo");
-    document.getElementById("edit-assistencia-custo").value = (custo && custo !== "-" && custo !== "R$ -") ? parseFloat(custo.replace("R$ ", "")) : "";
-
-    // Preencher garantia
-    const garantia = celulaAcoes.getAttribute("data-garantia");
-    document.getElementById("edit-assistencia-garantia").value = garantia && garantia !== "null" ? garantia : "30";
-
-    // Carregar e preencher vendedores
-    carregarVendedores().then(() => {
-        preencherSelectVendedoresAssistencia();
-
-        // Seleciona o vendedor atual
-        const selectVendedor = document.getElementById('edit-assistencia-vendedor');
-        if (vendedorData && vendedorData !== '-') {
-            selectVendedor.value = vendedorData;
-        } else {
-            // Se não tiver vendedor, usa o usuário logado como padrão
-            const loggedInUser = localStorage.getItem('loggedInUser');
-            if (loggedInUser && listaVendedores.includes(loggedInUser)) {
-                selectVendedor.value = loggedInUser;
-            }
-        }
-    });
-
-    // Buscar detalhes completos da assistência
-    buscarDetalhesAssistenciaParaEdicao(idAssistencia);
-
-    document.getElementById("modal-editar-assistencia").classList.remove("hidden");
+    // Exibe o modal
+    document.getElementById('modal-editar-assistencia').classList.remove('hidden');
 }
+
 
 
 
