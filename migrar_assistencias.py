@@ -13,7 +13,7 @@ def migrar_tabela_assistencias():
         conn.commit()
         cur.close()
         conn.close()
-        print("✅ Migração executada com sucesso!")
+        print("✅ Migração executada com sucesso! Colunas atualizadas.")
     except Exception as e:
         print("❌ Erro ao migrar:", e)
 
