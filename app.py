@@ -235,20 +235,81 @@ def obter_logins():
 def obter_vendas():
     try:
         conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
+        cur = conn.cursor(cursor_factory=RealDictCursor)  # ✅ retorna dicts
+
+        cur.execute("""
             SELECT id, nome_cliente, telefone_cliente, descricao_produto, forma_pagamento,
-                    valor_total, COALESCE(custo_produto, '-') as custo_produto,
-                    COALESCE(nome_vendedor, '-') as nome_vendedor,
-                    data_venda, garantia
-            FROM vendas ORDER BY data_venda DESC
+                    valor_total, COALESCE(custo_produto, 0) AS custo_produto,
+                    COALESCE(nome_vendedor, '-') AS nome_vendedor,
+                    data_venda, COALESCE(garantia, '30') AS garantia
+            FROM vendas
+            ORDER BY data_venda DESC
         """)
-        vendas = cursor.fetchall()
+        vendas = cur.fetchall()
+
+        cur.close()
         conn.close()
         return jsonify(vendas), 200
+
     except Exception as e:
+        print("❌ Erro ao obter vendas:", e)
         return jsonify({"mensagem": f"Erro: {e}"}), 500
 
+
+
+# ===================================
+# 🔹 EDITAR VENDA
+# ===================================
+@app.route('/editar_venda/<int:id>', methods=['PUT'])
+def editar_venda(id):
+    try:
+        data = request.get_json()
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            UPDATE vendas
+            SET nome_cliente=%s, telefone_cliente=%s, descricao_produto=%s,
+                valor_total=%s, forma_pagamento=%s, valor_dinheiro=%s,
+                valor_cartao=%s, valor_pix=%s, valor_vale=%s,
+                garantia=%s, custo_produto=%s, nome_vendedor=%s
+            WHERE id=%s
+        """, (
+            data.get('nome_cliente'), data.get('telefone_cliente'),
+            data.get('descricao_produto'), data.get('valor_total'),
+            data.get('forma_pagamento'), data.get('valor_dinheiro'),
+            data.get('valor_cartao'), data.get('valor_pix'),
+            data.get('valor_vale'), data.get('garantia'),
+            data.get('custo_produto'), data.get('nome_vendedor'),
+            id
+        ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"mensagem": "Venda atualizada com sucesso!"}), 200
+
+    except Exception as e:
+        print("❌ Erro ao editar venda:", e)
+        return jsonify({"mensagem": f"Erro: {e}"}), 500
+
+
+# ===================================
+# 🔹 EXCLUIR VENDA
+# ===================================
+@app.route('/excluir_venda/<int:id>', methods=['DELETE'])
+def excluir_venda(id):
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM vendas WHERE id = %s", (id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"mensagem": "Venda excluída com sucesso!"}), 200
+    except Exception as e:
+        print("❌ Erro ao excluir venda:", e)
+        return jsonify({"mensagem": f"Erro: {e}"}), 500
 
 
 

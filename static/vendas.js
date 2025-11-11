@@ -273,23 +273,34 @@ function carregarVendas() {
             const tabela = document.getElementById('transactions-table');
             tabela.innerHTML = '';
 
+            if (!Array.isArray(vendas) || vendas.length === 0) {
+                tabela.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-gray-500">
+                            Nenhuma venda encontrada.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
             vendas.forEach(venda => {
+                const statusPendente = !venda.custo_produto || venda.custo_produto === 0;
+                const statusHTML = statusPendente
+                    ? `<button onclick="abrirModalCusto(this, ${venda.id})"
+                            class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">
+                            Pendente
+                        </button>`
+                    : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="px-4 py-3 whitespace-nowrap">${venda.nome_cliente}</td>
                     <td class="px-4 py-3 whitespace-nowrap">${venda.descricao_produto}</td>
                     <td class="px-4 py-3 whitespace-nowrap">${traduzirPagamento(venda.forma_pagamento)}</td>
                     <td class="px-4 py-3 whitespace-nowrap">R$ ${parseFloat(venda.valor_total).toFixed(2)}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        ${venda.custo_produto === '-' ? '-' : `R$ ${parseFloat(venda.custo_produto).toFixed(2)}`}
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap">${venda.nome_vendedor || '-'}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        ${venda.custo_produto === '-' ?
-                        `<button onclick="abrirModalCusto(this, ${venda.id})"
-                                class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">Pendente</button>` :
-                        `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`}
-                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">${venda.custo_produto ? `R$ ${parseFloat(venda.custo_produto).toFixed(2)}` : '-'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${venda.nome_vendedor}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${statusHTML}</td>
                     <td class="px-4 py-3 space-x-2 whitespace-nowrap"
                         data-telefone="${venda.telefone_cliente || ''}"
                         data-pagamento="${venda.forma_pagamento || ''}"
@@ -309,13 +320,13 @@ function carregarVendas() {
                             class="px-3 py-1 rounded border border-red-500 bg-red-100 text-red-800 font-semibold hover:bg-red-200 transition">
                             Excluir
                         </button>
-                    </td>
-                `;
+                    </td>`;
                 tabela.appendChild(tr);
             });
         })
-        .catch(error => console.error('Erro ao carregar vendas:', error));
+        .catch(error => console.error('❌ Erro ao carregar vendas:', error));
 }
+
 
 
 
@@ -1443,28 +1454,6 @@ function preencherFiltroVendedoresVendas() {
     });
 }
 
-// MODIFICAR a função carregarVendas original para armazenar os dados
-function carregarVendas() {
-
-
-    fetch(`${API_VENDAS}/obter_vendas`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao carregar vendas: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(vendas => {
-
-            todasVendas = vendas;
-            preencherFiltroVendedoresVendas();
-            filtrarETableVendas(); // Aplicar filtros após carregar
-        })
-        .catch(error => {
-            console.error('Erro ao carregar vendas:', error);
-
-        });
-}
 
 
 function verificarPermissaoGerente() {
