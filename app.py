@@ -443,6 +443,70 @@ def verificar_cargo():
         return jsonify({"success": True, "cargo": cargo})
     return jsonify({"success": False, "mensagem": "Usuário não encontrado"}), 404
 
+
+# ===================================
+# 🔹 REGISTRAR SAÍDA
+# ===================================
+@app.route('/registrar_saida', methods=['POST'])
+def registrar_saida():
+    try:
+        data = request.get_json()
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO saidas (descricao_saida, valor_saida, data_saida, nome_vendedor)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            data.get('motivo'),
+            data.get('valor'),
+            data.get('data'),
+            data.get('funcionario')
+        ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({'mensagem': 'Saída registrada com sucesso!'}), 200
+
+    except Exception as e:
+        print(f"❌ Erro ao registrar saída: {e}")
+        return jsonify({'mensagem': f'Erro: {e}'}), 500
+
+
+
+@app.route('/obter_saidas', methods=['GET'])
+def obter_saidas():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, descricao_saida, valor_saida, data_saida, nome_vendedor
+            FROM saidas
+            ORDER BY data_saida DESC
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        saidas = [
+            {
+                "id": r[0],
+                "descricao_saida": r[1],
+                "valor_saida": float(r[2]),
+                "data_saida": str(r[3]),
+                "nome_vendedor": r[4]
+            }
+            for r in rows
+        ]
+
+        return jsonify(saidas), 200
+    except Exception as e:
+        print("❌ Erro ao buscar saídas:", e)
+        return jsonify({"erro": str(e)}), 500
+
+
 # ===================================
 # 🔹 EXECUÇÃO E CRIAÇÃO DE TABELAS
 # ===================================
