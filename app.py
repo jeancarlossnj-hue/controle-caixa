@@ -347,30 +347,21 @@ def obter_vendedores():
 
 # ===================================
 # 🔹 REGISTRAR ASSISTÊNCIA
-@app.route('/registrar/assistencias', methods=['POST'])
+# ===================================
+@app.route('/registrar_assistencia', methods=['POST'])
 def registrar_assistencia():
     try:
         data = request.get_json()
-        print("📥 Dados recebidos da assistência:", data)
-
         conn = get_connection()
         cur = conn.cursor()
 
         cur.execute("""
             INSERT INTO assistencias (
-                nome_cliente,
-                telefone_cliente,
-                marca_aparelho,
-                modelo_aparelho,
-                descricao_defeito,
-                servico_realizado,
-                valor_servico,
-                forma_pagamento,
-                garantia,
-                nome_vendedor,
-                data_registro
+                nome_cliente, telefone_cliente, marca_aparelho, modelo_aparelho,
+                descricao_defeito, servico_realizado, valor_servico, forma_pagamento,
+                garantia, nome_vendedor, custo_servico, status, data_registro
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NULL,'pendente',NOW())
         """, (
             data.get('nome_cliente'),
             data.get('telefone_cliente'),
@@ -387,14 +378,110 @@ def registrar_assistencia():
         conn.commit()
         cur.close()
         conn.close()
-
-        print("✅ Assistência registrada com sucesso!")
-        return jsonify({'sucesso': True, 'mensagem': '✅ Assistência registrada com sucesso!'}), 200
+        return jsonify({'mensagem': 'Assistência registrada como pendente!'}), 200
 
     except Exception as e:
         print(f"❌ Erro ao registrar assistência: {e}")
-        return jsonify({'sucesso': False, 'mensagem': str(e)}), 500
+        return jsonify({'mensagem': f'Erro: {e}'}), 500
 
+
+# ===================================
+# 🔹 OBTER ASSISTÊNCIAS
+# ===================================
+@app.route('/obter_assistencias', methods=['GET'])
+def obter_assistencias():
+    try:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("""
+            SELECT id, nome_cliente, telefone_cliente, marca_aparelho, modelo_aparelho,
+                   descricao_defeito, servico_realizado, valor_servico, forma_pagamento,
+                   garantia, nome_vendedor, custo_servico,
+                   CASE WHEN custo_servico IS NULL THEN 'pendente' ELSE 'concluido' END AS status,
+                   data_registro
+            FROM assistencias
+            ORDER BY data_registro DESC
+        """)
+        assistencias = cur.fetchall()
+        cur.close()
+        conn.close()
+        return jsonify(assistencias), 200
+    except Exception as e:
+        print(f"❌ Erro ao obter assistências: {e}")
+        return jsonify({'mensagem': f'Erro: {e}'}), 500
+
+
+# ===================================
+# 🔹 ATUALIZAR CUSTO (MODAL)
+# ===================================
+@app.route('/atualizar_custo_assistencia/<int:id>', methods=['PUT'])
+def atualizar_custo_assistencia(id):
+    try:
+        data = request.get_json()
+        custo = data.get('custo_servico')
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE assistencias
+            SET custo_servico = %s, status = 'concluido'
+            WHERE id = %s
+        """, (custo, id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'mensagem': 'Custo atualizado com sucesso!'}), 200
+    except Exception as e:
+        print(f"❌ Erro ao atualizar custo: {e}")
+        return jsonify({'mensagem': f'Erro: {e}'}), 500
+
+
+# ===================================
+# 🔹 EDITAR ASSISTÊNCIA
+# ===================================
+@app.route('/editar_assistencia/<int:id>', methods=['PUT'])
+def editar_assistencia(id):
+    try:
+        data = request.get_json()
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE assistencias
+            SET nome_cliente=%s, telefone_cliente=%s, marca_aparelho=%s,
+                modelo_aparelho=%s, descricao_defeito=%s, servico_realizado=%s,
+                valor_servico=%s, forma_pagamento=%s, garantia=%s, nome_vendedor=%s
+            WHERE id=%s
+        """, (
+            data.get('nome_cliente'), data.get('telefone_cliente'),
+            data.get('marca_aparelho'), data.get('modelo_aparelho'),
+            data.get('descricao_defeito'), data.get('servico_realizado'),
+            data.get('valor_servico'), data.get('forma_pagamento'),
+            data.get('garantia'), data.get('nome_vendedor'), id
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'mensagem': 'Assistência atualizada com sucesso!'}), 200
+    except Exception as e:
+        print(f"❌ Erro ao editar assistência: {e}")
+        return jsonify({'mensagem': f'Erro: {e}'}), 500
+
+
+# ===================================
+# 🔹 EXCLUIR ASSISTÊNCIA
+# ===================================
+@app.route('/excluir_assistencia/<int:id>', methods=['DELETE'])
+def excluir_assistencia(id):
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM assistencias WHERE id = %s", (id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'mensagem': 'Assistência excluída com sucesso!'}), 200
+    except Exception as e:
+        print(f"❌ Erro ao excluir assistência: {e}")
+        return jsonify({'mensagem': f'Erro: {e}'}), 500
 
 
 

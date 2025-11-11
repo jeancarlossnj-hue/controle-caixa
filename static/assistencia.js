@@ -417,62 +417,66 @@ document.addEventListener('DOMContentLoaded', function () {
 // ============================
 function carregarAssistencias() {
     fetch(`${API}/obter_assistencias`)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(assistencias => {
-            // ATUALIZAÇÃO: Preencher a variável global para os filtros
-            todasAssistencias = assistencias;
+            const tabela = document.getElementById("assistencias-table");
+            tabela.innerHTML = "";
 
-            const tabela = document.getElementById('assistencias-table');
-            if (!tabela) {
-                console.error("Tabela de assistências não encontrada!");
+            if (!assistencias.length) {
+                tabela.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-gray-500">Nenhuma assistência registrada.</td></tr>`;
                 return;
             }
 
-            tabela.innerHTML = '';
+            assistencias.forEach(a => {
+                const statusHTML = a.status === "pendente"
+                    ? `<button onclick="abrirModalCustoAssistencia(this, ${a.id})" class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">Pendente</button>`
+                    : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
 
+                const custoTexto = a.custo_servico ? `R$ ${parseFloat(a.custo_servico).toFixed(2)}` : "-";
 
-
-            assistencias.forEach(assistencia => {
-                // Debug
-
-                const tr = document.createElement('tr');
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-gray-50";
                 tr.innerHTML = `
-                    <td class="px-4 py-3 whitespace-nowrap">${assistencia.nome_cliente}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">${assistencia.telefone_cliente}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">${assistencia.marca_aparelho}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">${assistencia.modelo_aparelho}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">${traduzirPagamento(assistencia.forma_pagamento)}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">R$ ${parseFloat(assistencia.valor_servico).toFixed(2)}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">${assistencia.custo_servico === '-' ? '-' : `R$ ${parseFloat(assistencia.custo_servico).toFixed(2)}`}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">${assistencia.nome_vendedor || '-'}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        ${assistencia.custo_servico === '-' || assistencia.status === 'pendente'
-                        ? `<button onclick="abrirModalCustoAssistencia(this, ${assistencia.id})" class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">Pendente</button>`
-                        : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`}
-                    </td>
-                    <td class="px-4 py-3 space-x-2 whitespace-nowrap"
-                        data-telefone="${assistencia.telefone_cliente || ''}"
-                        data-pagamento="${assistencia.forma_pagamento || ''}"
-                        data-custo="${assistencia.custo_servico || ''}"
-                        data-garantia="${assistencia.periodo_garantia || ''}"
-                        data-vendedor="${assistencia.nome_vendedor || ''}"
-                        data-data-cadastro="${assistencia.data_cadastro || ''}">
-                        <button onclick="abrirModalDetalhesAssistencia(this)" class="px-3 py-1 rounded border border-green-700 bg-green-500 text-white font-semibold hover:bg-green-600 transition">Ver Detalhes</button>
-                        <button onclick="abrirModalEditarAssistencia(this, ${assistencia.id})" class="px-3 py-1 rounded border border-blue-500 bg-blue-100 text-blue-800 font-semibold hover:bg-blue-200 transition">Editar</button>
-                        <button onclick="confirmarExclusaoAssistencia(this, ${assistencia.id})" class="px-3 py-1 rounded border border-red-500 bg-red-100 text-red-800 font-semibold hover:bg-red-200 transition">Excluir</button>
-                    </td>
-                `;
+                    <td class="px-4 py-3 whitespace-nowrap">${a.nome_cliente}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${a.modelo_aparelho}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${a.descricao_defeito}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${a.forma_pagamento}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">R$ ${parseFloat(a.valor_servico).toFixed(2)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${custoTexto}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${a.nome_vendedor}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${statusHTML}</td>
+                    <td class="px-4 py-3 whitespace-nowrap space-x-2">
+                        <button onclick="abrirModalEditarAssistencia(${a.id})" class="px-3 py-1 bg-blue-100 border border-blue-400 rounded text-blue-800 hover:bg-blue-200">Editar</button>
+                        <button onclick="confirmarExclusaoAssistencia(${a.id})" class="px-3 py-1 bg-red-100 border border-red-400 rounded text-red-800 hover:bg-red-200">Excluir</button>
+                    </td>`;
                 tabela.appendChild(tr);
             });
-
-            // ATUALIZAÇÃO: Preencher o select de vendedores após carregar
-            preencherFiltroVendedoresAssistencias();
-
         })
-        .catch(error => {
-            console.error('Erro ao carregar assistências:', error);
-        });
+        .catch(err => console.error("❌ Erro ao carregar assistências:", err));
 }
+
+
+function salvarCustoAssistencia() {
+    const custo = document.getElementById("input-custo-assistencia").value;
+    if (!custo || custo <= 0) {
+        alert("Informe um custo válido.");
+        return;
+    }
+
+    fetch(`${API}/atualizar_custo_assistencia/${assistenciaIdAtual}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ custo_servico: parseFloat(custo) })
+    })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.mensagem);
+            fecharModalCustoAssistencia();
+            carregarAssistencias();
+        })
+        .catch(err => console.error("Erro ao salvar custo:", err));
+}
+
 
 // ============================
 //  PREENCHER FILTRO DE VENDEDORES - ASSISTÊNCIAS
@@ -863,40 +867,8 @@ function abrirModalCustoAssistencia(botao, idAssistencia) {
     document.getElementById("modal-custo-assistencia").classList.remove("hidden");
 }
 
-function salvarCustoAssistencia() {
-    const custo = document.getElementById("input-custo-assistencia").value;
 
-    if (custo === "" || parseFloat(custo) <= 0) {
-        alert("Por favor, informe um valor de custo válido.");
-        return;
-    }
 
-    fetch(`${API}/atualizar_custo_assistencia/${assistenciaIdAtual}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            custo_servico: parseFloat(custo),
-            status: 'concluido'
-        })
-    })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.mensagem || `Erro HTTP ${response.status}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            alert(data.mensagem);
-            fecharModalCustoAssistencia();
-            carregarAssistencias();
-        })
-        .catch(err => {
-            console.error('Erro ao atualizar custo:', err);
-            alert('Erro ao salvar custo: ' + err.message);
-        });
-}
 
 function fecharModalCustoAssistencia() {
     document.getElementById("modal-custo-assistencia").classList.add("hidden");
