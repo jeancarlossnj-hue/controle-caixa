@@ -433,9 +433,13 @@ function carregarAssistencias() {
                     : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
 
 
-                const custoTexto = (!a.custo_servico || isNaN(parseFloat(a.custo_servico)))
-                    ? '-'
-                    : `R$ ${parseFloat(a.custo_servico).toFixed(2)}`;
+                // Corrige custo com símbolo de moeda ($ ou R$) e valores nulos
+                const custoBruto = a.custo_servico ? a.custo_servico.toString().replace(/[^\d.,-]/g, '') : null;
+                const custoNumero = custoBruto ? parseFloat(custoBruto) : null;
+                const custoTexto = (custoNumero && !isNaN(custoNumero))
+                    ? `R$ ${custoNumero.toFixed(2)}`
+                    : '-';
+
 
 
                 const tr = document.createElement("tr");
@@ -450,10 +454,11 @@ function carregarAssistencias() {
                     <td class="px-4 py-3 whitespace-nowrap">${a.nome_vendedor}</td>
                     <td class="px-4 py-3 whitespace-nowrap">${statusHTML}</td>
                     <td class="px-4 py-3 whitespace-nowrap space-x-2">
-                        <button onclick="abrirModalEditarAssistencia(this, ${a.id})" 
-                            class="px-3 py-1 bg-blue-100 border border-blue-400 rounded text-blue-800           hover:bg-blue-200">
+                        <button onclick="abrirModalEditarAssistencia(this, ${a.id})"
+                            class="px-3 py-1 bg-blue-100 border border-blue-400 rounded text-blue-800 hover:bg-blue-200">
                             Editar
                         </button>
+
 
                         <button onclick="confirmarExclusaoAssistencia(${a.id})" class="px-3 py-1 bg-red-100 border border-red-400 rounded text-red-800 hover:bg-red-200">Excluir</button>
                     </td>`;
@@ -886,30 +891,67 @@ function fecharModalCustoAssistencia() {
 // ============================
 //  ABRIR MODAL EDITAR ASSISTÊNCIA (CORRIGIDO)
 // ============================
-function abrirModalEditarAssistencia(botao, id) {
-    // agora "botao" é o próprio elemento HTML <button>
-    const linha = botao.closest('tr'); // pega a linha da tabela onde o botão está
+function abrirModalEditarAssistencia(botao, idAssistencia) {
+    try {
+        const cargo = localStorage.getItem("userRole") || "Funcionario";
+        if (cargo !== "Gerente") {
+            alert("❌ Apenas gerentes podem editar assistências!");
+            return;
+        }
 
-    if (!linha) {
-        console.error("❌ Linha da tabela não encontrada para edição.");
-        return;
+        assistenciaIdEditando = idAssistencia;
+        const linha = botao.closest("tr");
+
+        if (!linha) {
+            console.error("❌ Linha da assistência não encontrada!");
+            return;
+        }
+
+        // 🔹 Abre o modal primeiro
+        const modal = document.getElementById("modal-editar-assistencia");
+        modal.classList.remove("hidden");
+
+        // 🔹 Aguarda um pequeno tempo para garantir que o DOM interno do modal esteja carregado
+        setTimeout(() => {
+            const nome = linha.children[0]?.textContent.trim() || "";
+            const modelo = linha.children[1]?.textContent.trim() || "";
+            const descricao = linha.children[2]?.textContent.trim() || "";
+            const pagamento = linha.children[3]?.textContent.trim() || "";
+            const valor = linha.children[4]?.textContent.replace(/[^\d.,-]/g, "") || "";
+            const custo = linha.children[5]?.textContent.replace(/[^\d.,-]/g, "") || "";
+            const vendedor = linha.children[6]?.textContent.trim() || "";
+
+            // 🔹 Preenche os campos do modal (garantindo que existam)
+            const campos = {
+                nome: document.getElementById("edit-assistencia-nome"),
+                telefone: document.getElementById("edit-assistencia-telefone"),
+                marca: document.getElementById("edit-assistencia-marca"),
+                modelo: document.getElementById("edit-assistencia-modelo"),
+                defeito: document.getElementById("edit-assistencia-defeito"),
+                servico: document.getElementById("edit-assistencia-servico"),
+                valor: document.getElementById("edit-assistencia-valor"),
+                pagamento: document.getElementById("edit-assistencia-pagamento"),
+                garantia: document.getElementById("edit-assistencia-garantia"),
+                custo: document.getElementById("edit-assistencia-custo"),
+                vendedor: document.getElementById("edit-assistencia-vendedor"),
+            };
+
+            // ✅ Preenche cada campo se existir
+            if (campos.nome) campos.nome.value = nome;
+            if (campos.modelo) campos.modelo.value = modelo;
+            if (campos.defeito) campos.defeito.value = descricao;
+            if (campos.valor) campos.valor.value = valor;
+            if (campos.custo) campos.custo.value = custo;
+            if (campos.vendedor) campos.vendedor.value = vendedor;
+
+            console.log("✅ Modal preenchido com sucesso.");
+        }, 150);
+    } catch (erro) {
+        console.error("❌ Erro ao abrir modal de edição:", erro);
     }
-
-    // Aqui você pode acessar os dados da linha para preencher o modal:
-    const nomeCliente = linha.cells[0].textContent;
-    const modelo = linha.cells[1].textContent;
-    const defeito = linha.cells[2].textContent;
-    const valorServico = linha.cells[4].textContent.replace('R$', '').trim();
-
-    // Exemplo de preenchimento de modal
-    document.getElementById('editar-nome-cliente').value = nomeCliente;
-    document.getElementById('editar-modelo').value = modelo;
-    document.getElementById('editar-defeito').value = defeito;
-    document.getElementById('editar-valor').value = valorServico;
-
-    // Exibe o modal
-    document.getElementById('modal-editar-assistencia').classList.remove('hidden');
 }
+
+
 
 
 
