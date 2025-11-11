@@ -284,13 +284,16 @@ function carregarVendas() {
             }
 
             vendas.forEach(venda => {
+                // ✅ Verifica se o custo é nulo ou 0 → pendente
                 const statusPendente = !venda.custo_produto || venda.custo_produto === 0;
                 const statusHTML = statusPendente
                     ? `<button onclick="abrirModalCusto(this, ${venda.id})"
                             class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">
                             Pendente
-                        </button>`
+                       </button>`
                     : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
+
+                const custoTexto = statusPendente ? '-' : `R$ ${parseFloat(venda.custo_produto).toFixed(2)}`;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -298,7 +301,7 @@ function carregarVendas() {
                     <td class="px-4 py-3 whitespace-nowrap">${venda.descricao_produto}</td>
                     <td class="px-4 py-3 whitespace-nowrap">${traduzirPagamento(venda.forma_pagamento)}</td>
                     <td class="px-4 py-3 whitespace-nowrap">R$ ${parseFloat(venda.valor_total).toFixed(2)}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">${venda.custo_produto ? `R$ ${parseFloat(venda.custo_produto).toFixed(2)}` : '-'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${custoTexto}</td>
                     <td class="px-4 py-3 whitespace-nowrap">${venda.nome_vendedor}</td>
                     <td class="px-4 py-3 whitespace-nowrap">${statusHTML}</td>
                     <td class="px-4 py-3 space-x-2 whitespace-nowrap"
@@ -326,6 +329,7 @@ function carregarVendas() {
         })
         .catch(error => console.error('❌ Erro ao carregar vendas:', error));
 }
+
 
 
 

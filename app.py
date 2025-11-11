@@ -152,12 +152,13 @@ def registrar_venda():
         nome_vendedor = data.get('nome_vendedor') or session.get('username', 'Desconhecido')
         data_venda = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+        # 🔹 Inserir a venda SEM custo (NULL)
         cursor.execute("""
             INSERT INTO vendas (
                 nome_cliente, telefone_cliente, descricao_produto, valor_total,
                 forma_pagamento, valor_dinheiro, valor_cartao, valor_pix,
-                valor_vale, garantia, data_venda, nome_vendedor
-            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                valor_vale, garantia, data_venda, nome_vendedor, custo_produto
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NULL)
         """, (
             data['nome_cliente'], data['telefone_cliente'], data['descricao_produto'],
             data['valor_total'], data['forma_pagamento'], data['valor_dinheiro'],
@@ -167,7 +168,7 @@ def registrar_venda():
 
         conn.commit()
         conn.close()
-        return jsonify({'mensagem': 'Venda registrada com sucesso!'}), 200
+        return jsonify({'mensagem': 'Venda registrada como pendente com sucesso!'}), 200
 
     except Exception as e:
         print(f"Erro ao registrar venda: {str(e)}")
@@ -238,13 +239,14 @@ def obter_vendas():
         cur = conn.cursor(cursor_factory=RealDictCursor)  # ✅ retorna dicts
 
         cur.execute("""
-            SELECT id, nome_cliente, telefone_cliente, descricao_produto, forma_pagamento,
-                    valor_total, COALESCE(custo_produto, 0) AS custo_produto,
-                    COALESCE(nome_vendedor, '-') AS nome_vendedor,
-                    data_venda, COALESCE(garantia, '30') AS garantia
-            FROM vendas
-            ORDER BY data_venda DESC
+        SELECT id, nome_cliente, telefone_cliente, descricao_produto, forma_pagamento,
+            valor_total, custo_produto,
+            COALESCE(nome_vendedor, '-') as nome_vendedor,
+            data_venda, COALESCE(garantia, '30') as garantia
+        FROM vendas
+        ORDER BY data_venda DESC
         """)
+
         vendas = cur.fetchall()
 
         cur.close()
