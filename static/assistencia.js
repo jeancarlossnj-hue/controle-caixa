@@ -296,7 +296,7 @@ async function salvarAssistenciaNoBanco(dadosAssistencia) {
     try {
         console.log("📤 Enviando dados COMPLETOS para API...", dadosAssistencia);
 
-        const response = await fetch(`${API}/registrar/assistencias`, {
+        const response = await fetch(`${API}/registrar_assistencias`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dadosAssistencia)
