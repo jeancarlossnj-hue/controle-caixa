@@ -418,6 +418,17 @@
             </div>
         </div>
     </div>
+    <!-- Modal Detalhes Assistência -->
+    <div id="modal-detalhes-assistencia"
+        class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-96 p-6">
+            <h2 class="text-lg font-semibold mb-3">📋 Detalhes da Assistência</h2>
+            <div id="conteudo-detalhes-assistencia" class="text-sm space-y-2"></div>
+            <button onclick="fecharModalDetalhesAssistencia()"
+                class="mt-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Fechar</button>
+        </div>
+    </div>
+
     <script>
         function checkDashboardAccess() {
             const cargo = localStorage.getItem("userRole") || "Funcionario";
