@@ -1,3 +1,5 @@
+const API_LOGIN = 'https://controle-caixa-production-b94c.up.railway.app';
+
 // vendedores.js - Gerenciamento de vendedores
 (function() {
     'use strict';
