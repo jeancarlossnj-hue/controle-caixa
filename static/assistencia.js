@@ -494,6 +494,113 @@ function carregarAssistencias() {
 }
 
 
+// ============================
+//  MODAL DETALHES ASSISTÊNCIA - ESTILO VENDAS
+// ============================
+function verDetalhesAssistencia(botao) {
+    const celula = botao.closest("td");
+    const nome = celula.getAttribute("data-cliente");
+    const marca = celula.getAttribute("data-marca");
+    const modelo = celula.getAttribute("data-modelo");
+    const servico = celula.getAttribute("data-servico");
+    const forma = celula.getAttribute("data-forma");
+    const valor = celula.getAttribute("data-valor");
+    const custo = celula.getAttribute("data-custo");
+    const vendedor = celula.getAttribute("data-vendedor");
+    const status = celula.getAttribute("data-status");
+    const dataRegistro = celula.getAttribute("data-data");
+
+    let lucroHTML = "";
+    if (custo && custo !== "-" && custo !== "R$ -") {
+        const valorNum = parseFloat(valor.replace("R$", "").trim()) || 0;
+        const custoNum = parseFloat(custo.replace("R$", "").trim()) || 0;
+        const lucro = valorNum - custoNum;
+        const margem = valorNum > 0 ? ((lucro / valorNum) * 100).toFixed(1) : "0.0";
+        lucroHTML = `
+      <div class="text-center p-3 bg-green-50 rounded">
+        <div class="font-semibold text-green-800">Lucro Total</div>
+        <div class="text-lg font-bold">R$ ${lucro.toFixed(2)}</div>
+        <div class="text-sm text-green-600">Margem: ${margem}%</div>
+      </div>`;
+    }
+
+    const detalhesDiv = document.getElementById("detalhes-assistencia-content");
+    detalhesDiv.innerHTML = `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="space-y-2">
+        <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Informações do Cliente</h3>
+        <div><strong>Cliente:</strong> ${nome}</div>
+        <div><strong>Marca:</strong> ${marca}</div>
+        <div><strong>Modelo:</strong> ${modelo}</div>
+        <div><strong>Vendedor/Técnico:</strong> ${vendedor}</div>
+        <div><strong>Data:</strong> ${dataRegistro || '-'}</div>
+        <div><strong>Status:</strong> 
+          <span class="px-2 py-1 rounded text-xs font-medium ${status.includes('pendente') ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">${status}</span>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Informações do Serviço</h3>
+        <div><strong>Serviço:</strong> ${servico}</div>
+        <div><strong>Forma de Pagamento:</strong> ${forma}</div>
+        <div><strong>Valor:</strong> ${valor}</div>
+        <div><strong>Custo:</strong> ${custo}</div>
+      </div>
+    </div>
+
+    <div class="border-t pt-4">
+      <h3 class="font-semibold text-gray-800 text-lg mb-2">Resumo Financeiro</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="text-center p-3 bg-blue-50 rounded">
+          <div class="font-semibold text-blue-800">Valor do Serviço</div>
+          <div class="text-lg font-bold">${valor}</div>
+        </div>
+        <div class="text-center p-3 bg-purple-50 rounded">
+          <div class="font-semibold text-purple-800">Custo</div>
+          <div class="text-lg font-bold">${custo}</div>
+        </div>
+        ${lucroHTML || `
+          <div class="text-center p-3 bg-gray-50 rounded">
+            <div class="font-semibold text-gray-800">Lucro</div>
+            <div class="text-sm text-gray-600">Custo pendente</div>
+          </div>`}
+      </div>
+    </div>
+  `;
+
+    detalhesDiv.setAttribute("data-assistencia-detalhes", JSON.stringify({
+        nome_cliente: nome,
+        marca_aparelho: marca,
+        modelo_aparelho: modelo,
+        servico_realizado: servico,
+        valor_servico: parseFloat(valor.replace("R$", "").trim()) || 0,
+        forma_pagamento: forma,
+        nome_vendedor: vendedor,
+        data_registro: dataRegistro
+    }));
+
+    document.getElementById("modal-detalhes-assistencia").classList.remove("hidden");
+}
+
+// Fechar modal
+function fecharModalDetalhesAssistencia() {
+    document.getElementById("modal-detalhes-assistencia").classList.add("hidden");
+}
+
+// Imprimir cupom da assistência
+function imprimirCupomAssistencia() {
+    const detalhesDiv = document.getElementById("detalhes-assistencia-content");
+    const dados = JSON.parse(detalhesDiv.getAttribute("data-assistencia-detalhes"));
+
+    if (window.pdfGenerator && window.pdfGenerator.abrirModalAssistencia) {
+        window.pdfGenerator.abrirModalAssistencia(dados, (res) => {
+            console.log("📄 Resultado da impressão:", res);
+        });
+    } else {
+        alert("⚠️ Gerador de PDF não disponível. Recarregue a página.");
+    }
+}
+
+
 
 
 

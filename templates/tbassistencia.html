@@ -214,20 +214,6 @@
         </div>
     </div>
 
-    <!-- Modal Detalhes Assistência -->
-    <div id="modal-detalhes-assistencia" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg w-[420px] p-6">
-            <h2 class="text-lg font-semibold mb-3">📋 Detalhes da Assistência</h2>
-            <div id="conteudo-detalhes-assistencia" class="text-sm space-y-2"></div>
-            <div class="mt-5 flex justify-end">
-                <button onclick="fecharModalDetalhesAssistencia()"
-                    class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-                    Fechar
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal de Edição Assistência - Melhorado -->
     <div id="modal-editar-assistencia"
         class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-3 sm:p-4 overflow-y-auto">
@@ -326,14 +312,28 @@
     </div>
     <!-- Modal Detalhes Assistência -->
     <div id="modal-detalhes-assistencia"
-        class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg w-96 p-6">
-            <h2 class="text-lg font-semibold mb-3">📋 Detalhes da Assistência</h2>
-            <div id="conteudo-detalhes-assistencia" class="text-sm space-y-2"></div>
-            <button onclick="fecharModalDetalhesAssistencia()"
-                class="mt-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Fechar</button>
+        class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-2xl mx-auto shadow-lg overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-lg font-semibold text-gray-800">Detalhes da Assistência</h3>
+                <button onclick="fecharModalDetalhesAssistencia()"
+                    class="text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <div id="detalhes-assistencia-content" class="text-sm text-gray-700 space-y-3">
+                <!-- conteúdo dinâmico aqui -->
+            </div>
+
+            <div class="border-t pt-4 mt-4 flex justify-center">
+                <button onclick="imprimirCupomAssistencia()"
+                    class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-print"></i>
+                    Imprimir Cupom
+                </button>
+            </div>
         </div>
     </div>
+
 
 
     <script>
