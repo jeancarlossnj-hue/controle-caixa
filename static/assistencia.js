@@ -415,6 +415,9 @@ document.addEventListener('DOMContentLoaded', function () {
 // ===============================================
 // 🟢 Carregar Assistências (corrigido e responsivo)
 // ===============================================
+// ===============================================
+// 🟢 Carregar Assistências (corrigido e otimizado)
+// ===============================================
 function carregarAssistencias() {
     fetch(`${API}/obter_assistencias`)
         .then(res => res.json())
@@ -426,9 +429,16 @@ function carregarAssistencias() {
                 // ==========================
                 // 💰 Formatação de custo
                 // ==========================
-                const custoRaw = a.custo_servico || a.custo || a.custo_bruto;
-                const custoNum = parseFloat(custoRaw) || 0;
-                const custoHTML = (custoRaw && !isNaN(custoNum))
+                let custoNum = 0;
+                if (a.custo_servico != null && a.custo_servico !== "") {
+                    custoNum = parseFloat(a.custo_servico);
+                } else if (a.custo != null && a.custo !== "") {
+                    custoNum = parseFloat(a.custo);
+                } else if (a.custo_bruto != null && a.custo_bruto !== "") {
+                    custoNum = parseFloat(a.custo_bruto);
+                }
+
+                const custoHTML = (!isNaN(custoNum) && custoNum > 0)
                     ? `<span class="inline-flex items-center justify-end gap-1 font-mono tabular-nums">
                            <span>R$</span><span>${custoNum.toFixed(2)}</span>
                        </span>`
@@ -438,7 +448,7 @@ function carregarAssistencias() {
                 // 💵 Formatação de valor
                 // ==========================
                 const valorNum = parseFloat(a.valor_servico) || 0;
-                const valorHTML = (a.valor_servico != null && !isNaN(valorNum))
+                const valorHTML = (a.valor_servico != null && !isNaN(valorNum) && valorNum > 0)
                     ? `<span class="inline-flex items-center justify-end gap-1 font-mono tabular-nums">
                            <span>R$</span><span>${valorNum.toFixed(2)}</span>
                        </span>`
@@ -447,7 +457,7 @@ function carregarAssistencias() {
                 // ==========================
                 // ⚙️ Status visual
                 // ==========================
-                const statusPendente = !a.custo_servico || a.status === "pendente";
+                const statusPendente = (!a.custo_servico || a.custo_servico === 0 || a.status === "pendente");
                 const statusHTML = statusPendente
                     ? `<button onclick="abrirModalCustoAssistencia(${a.id})"
                           class="bg-yellow-100 text-yellow-800 border border-yellow-400 px-2 py-1 rounded font-semibold hover:bg-yellow-200 transition">
@@ -507,6 +517,7 @@ function carregarAssistencias() {
         })
         .catch(err => console.error("❌ Erro ao carregar assistências:", err));
 }
+
 
 
 // ============================
@@ -1358,17 +1369,18 @@ function confirmarExclusaoAssistencia(idAssistencia) {
 
 // === TRADUZ PAGAMENTO (igual ao de vendas) ===
 function traduzirPagamento(forma) {
-    switch (forma) {
-        case 'cash': return 'Dinheiro';
-        case 'card': return 'Cartão';
-        case 'pix': return 'Pix';
-        case 'voucher': return 'Vale';
-        case 'cash_card': return 'Dinheiro + Cartão';
-        case 'cash_pix': return 'Dinheiro + Pix';
-        case 'card_pix': return 'Cartão + Pix';
-        default: return forma;
-    }
+    const map = {
+        cash: "Dinheiro",
+        card: "Cartão",
+        pix: "Pix",
+        voucher: "Vale",
+        cash_card: "Dinheiro + Cartão",
+        cash_pix: "Dinheiro + Pix",
+        card_pix: "Cartão + Pix"
+    };
+    return map[forma] || forma || "-";
 }
+
 
 
 function traduzirChecklist(chave) {

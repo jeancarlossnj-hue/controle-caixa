@@ -390,23 +390,49 @@ def obter_assistencias():
     try:
         conn = get_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
+
         cur.execute("""
-            SELECT id, nome_cliente, telefone_cliente, marca_aparelho, modelo_aparelho,
-                   descricao_defeito, servico_realizado, valor_servico, forma_pagamento,
-                   garantia, nome_vendedor, custo_servico,
-                   CASE WHEN custo_servico IS NULL THEN 'pendente' ELSE 'concluido' END AS status,
-                   data_registro
+            SELECT 
+                id,
+                nome_cliente,
+                telefone_cliente,
+                marca_aparelho,
+                modelo_aparelho,
+                descricao_defeito,
+                servico_realizado,
+                valor_servico,
+                forma_pagamento,
+                garantia,
+                nome_vendedor,
+                COALESCE(custo_servico, 0) AS custo_servico,
+                CASE 
+                    WHEN custo_servico IS NULL THEN 'pendente' 
+                    ELSE 'concluido' 
+                END AS status,
+                data_registro
             FROM assistencias
             ORDER BY data_registro DESC
         """)
+
         assistencias = cur.fetchall()
         cur.close()
         conn.close()
+
+        # ✅ Garante que todos os campos numéricos venham formatados corretamente
+        for a in assistencias:
+            if a.get('valor_servico') is None:
+                a['valor_servico'] = 0.0
+            if a.get('custo_servico') is None:
+                a['custo_servico'] = 0.0
+            # 🔹 Converte Decimal → float (caso seu banco esteja retornando Decimal)
+            a['valor_servico'] = float(a['valor_servico'])
+            a['custo_servico'] = float(a['custo_servico'])
+
         return jsonify(assistencias), 200
+
     except Exception as e:
         print(f"❌ Erro ao obter assistências: {e}")
         return jsonify({'mensagem': f'Erro: {e}'}), 500
-
 
 # ===================================
 # 🔹 ATUALIZAR CUSTO (MODAL)
