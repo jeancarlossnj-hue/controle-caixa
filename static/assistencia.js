@@ -413,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 // ===============================================
-// 🟢 Carregar Assistências
+// 🟢 Carregar Assistências (corrigido e responsivo)
 // ===============================================
 function carregarAssistencias() {
     fetch(`${API}/obter_assistencias`)
@@ -423,29 +423,41 @@ function carregarAssistencias() {
             tabela.innerHTML = "";
 
             assistencias.forEach(a => {
-                // 🔹 Corrigir formatação de custo
+                // ==========================
+                // 💰 Formatação de custo
+                // ==========================
                 const custoRaw = a.custo_servico || a.custo || a.custo_bruto;
                 const custoNum = parseFloat(custoRaw) || 0;
-                const custoTexto = custoRaw && !isNaN(custoNum)
-                    ? `R$ ${custoNum.toFixed(2)}`
+                const custoHTML = (custoRaw && !isNaN(custoNum))
+                    ? `<span class="inline-flex items-center justify-end gap-1 font-mono tabular-nums">
+                           <span>R$</span><span>${custoNum.toFixed(2)}</span>
+                       </span>`
                     : "-";
 
-                // 🔹 Corrigir formatação do valor
+                // ==========================
+                // 💵 Formatação de valor
+                // ==========================
                 const valorNum = parseFloat(a.valor_servico) || 0;
-                const valorTexto = a.valor_servico != null && !isNaN(valorNum)
-                    ? `R$ ${valorNum.toFixed(2)}`
+                const valorHTML = (a.valor_servico != null && !isNaN(valorNum))
+                    ? `<span class="inline-flex items-center justify-end gap-1 font-mono tabular-nums">
+                           <span>R$</span><span>${valorNum.toFixed(2)}</span>
+                       </span>`
                     : "-";
 
-                // 🔹 Status visual
+                // ==========================
+                // ⚙️ Status visual
+                // ==========================
                 const statusPendente = !a.custo_servico || a.status === "pendente";
                 const statusHTML = statusPendente
                     ? `<button onclick="abrirModalCustoAssistencia(${a.id})"
                           class="bg-yellow-100 text-yellow-800 border border-yellow-400 px-2 py-1 rounded font-semibold hover:bg-yellow-200 transition">
-                          Pendente
+                          ⚠️ Pendente
                        </button>`
-                    : `<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold">Concluído</span>`;
+                    : `<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold">✅ Concluído</span>`;
 
-                // 🔹 Criar linha da tabela
+                // ==========================
+                // 🧾 Criar linha da tabela
+                // ==========================
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-gray-50 text-xs sm:text-sm";
                 tr.innerHTML = `
@@ -454,12 +466,12 @@ function carregarAssistencias() {
                     <td class="px-3 sm:px-4 py-2">${a.modelo_aparelho || "-"}</td>
                     <td class="px-3 sm:px-4 py-2">${a.servico_realizado || "-"}</td>
                     <td class="px-3 sm:px-4 py-2">${traduzirPagamento(a.forma_pagamento)}</td>
-                    <td class="px-3 sm:px-4 py-2 text-right">${valorTexto}</td>
-                    <td class="px-3 sm:px-4 py-2 text-right">${custoTexto}</td>
+                    <td class="px-3 sm:px-4 py-2 text-right align-middle">${valorHTML}</td>
+                    <td class="px-3 sm:px-4 py-2 text-right align-middle">${custoHTML}</td>
                     <td class="px-3 sm:px-4 py-2">${a.nome_vendedor || "-"}</td>
                     <td class="px-3 sm:px-4 py-2 text-center">${statusHTML}</td>
 
-                    <!-- Botões de ação -->
+                    <!-- 🔘 Botões de ação -->
                     <td class="flex flex-col sm:flex-row gap-2 justify-center items-center py-2 sm:py-0 text-center"
                         data-telefone="${a.telefone_cliente || ''}"
                         data-pagamento="${a.forma_pagamento || 'cash'}"
@@ -467,21 +479,21 @@ function carregarAssistencias() {
                         data-vendedor="${a.nome_vendedor || ''}"
                         data-data-cadastro="${a.data_registro || new Date().toISOString()}">
                         
-                        <!-- Botão Detalhes -->
+                        <!-- 📘 Detalhes -->
                         <button onclick="abrirModalDetalhesAssistencia(this)"
                                 class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white text-xs sm:text-sm px-3 py-2 rounded transition flex items-center justify-center gap-1">
                             <i class="fas fa-info-circle"></i>
                             <span class="hidden sm:inline">Detalhes</span>
                         </button>
 
-                        <!-- Botão Editar -->
+                        <!-- ✏️ Editar -->
                         <button onclick="editarAssistencia(${a.id})"
                                 class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white text-xs sm:text-sm px-3 py-2 rounded transition flex items-center justify-center gap-1">
                             <i class="fas fa-edit"></i>
                             <span class="hidden sm:inline">Editar</span>
                         </button>
 
-                        <!-- Botão Excluir -->
+                        <!-- 🗑️ Excluir -->
                         <button onclick="excluirAssistencia(${a.id})"
                                 class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-3 py-2 rounded transition flex items-center justify-center gap-1">
                             <i class="fas fa-trash-alt"></i>
@@ -954,15 +966,61 @@ function imprimirCupomAssistencia() {
 }
 
 
+
+
 // ============================
 //  MODAL CUSTO ASSISTÊNCIA
 // ============================
-function abrirModalCustoAssistencia(botao, idAssistencia) {
-    assistenciaIdAtual = idAssistencia;
-    document.getElementById("input-custo-assistencia").value = "";
-    document.getElementById("modal-custo-assistencia").classList.remove("hidden");
+// Abrir modal já guardando o id
+function abrirModalCustoAssistencia(id) {
+    assistenciaIdAtual = id;
+    const modal = document.getElementById("modal-custo-assistencia");
+    const input = document.getElementById("input-custo-assistencia");
+    if (input) input.value = "";
+    if (modal) modal.classList.remove("hidden");
 }
 
+function fecharModalCustoAssistencia() {
+    const modal = document.getElementById("modal-custo-assistencia");
+    if (modal) modal.classList.add("hidden");
+}
+
+// Salvar custo com tratamento de respostas não-JSON (evita "Unexpected token <")
+async function salvarCustoAssistencia() {
+    try {
+        if (!assistenciaIdAtual) {
+            alert("ID da assistência não encontrado. Abra o modal novamente.");
+            return;
+        }
+        const input = document.getElementById("input-custo-assistencia");
+        const custo = parseFloat(input?.value || "0");
+        if (isNaN(custo)) {
+            alert("Informe um custo válido.");
+            return;
+        }
+
+        const resp = await fetch(`${API}/atualizar_custo_assistencia/${assistenciaIdAtual}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ custo_servico: custo })
+        });
+
+        const texto = await resp.text();
+        let data;
+        try { data = JSON.parse(texto); } catch { data = null; }
+
+        if (!resp.ok) {
+            throw new Error(data?.mensagem || texto || "Falha ao salvar custo.");
+        }
+
+        fecharModalCustoAssistencia();
+        // recarrega a tabela para atualizar status/lucro
+        carregarAssistencias();
+    } catch (err) {
+        console.error("Erro ao salvar custo:", err);
+        alert("❌ Não foi possível salvar o custo. Detalhe: " + err.message);
+    }
+}
 
 
 
@@ -971,40 +1029,6 @@ function fecharModalCustoAssistencia() {
 }
 
 
-// ============================
-// ✏️ EDITAR ASSISTÊNCIA - ABRE O MODAL CORRETO
-// ============================
-function editarAssistencia(id) {
-    fetch(`${API}/obter_assistencias`)
-        .then(res => res.json())
-        .then(assistencias => {
-            const a = assistencias.find(item => item.id === id);
-            if (!a) return alert("❌ Assistência não encontrada.");
-
-            // Preenche campos do modal de edição
-            document.getElementById('edit-assistencia-nome').value = a.nome_cliente || '';
-            document.getElementById('edit-assistencia-telefone').value = a.telefone_cliente || '';
-            document.getElementById('edit-assistencia-marca').value = a.marca_aparelho || '';
-            document.getElementById('edit-assistencia-modelo').value = a.modelo_aparelho || '';
-            document.getElementById('edit-assistencia-defeito').value = a.descricao_defeito || '';
-            document.getElementById('edit-assistencia-servico').value = a.servico_realizado || '';
-            document.getElementById('edit-assistencia-valor').value = a.valor_servico || '';
-            document.getElementById('edit-assistencia-pagamento').value = a.forma_pagamento || 'cash';
-            document.getElementById('edit-assistencia-garantia').value = a.garantia || '30';
-            document.getElementById('edit-assistencia-custo').value = a.custo_servico || '';
-            document.getElementById('edit-assistencia-vendedor').value = a.nome_vendedor || '';
-
-            // Guarda o ID atual para salvar depois
-            document.getElementById('modal-editar-assistencia').setAttribute('data-edit-id', id);
-
-            // Abre o modal
-            document.getElementById('modal-editar-assistencia').classList.remove('hidden');
-        })
-        .catch(err => {
-            console.error("Erro ao carregar assistência:", err);
-            alert("❌ Erro ao carregar dados da assistência.");
-        });
-}
 
 
 // ============================
@@ -1261,16 +1285,16 @@ function salvarEdicaoAssistencia() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
     })
-    .then(res => res.json())
-    .then(data => {
-        alert("✅ Assistência atualizada com sucesso!");
-        fecharModalEditarAssistencia();
-        carregarAssistencias();
-    })
-    .catch(err => {
-        console.error("Erro ao salvar edição:", err);
-        alert("❌ Erro ao salvar edição.");
-    });
+        .then(res => res.json())
+        .then(data => {
+            alert("✅ Assistência atualizada com sucesso!");
+            fecharModalEditarAssistencia();
+            carregarAssistencias();
+        })
+        .catch(err => {
+            console.error("Erro ao salvar edição:", err);
+            alert("❌ Erro ao salvar edição.");
+        });
 }
 
 
@@ -1510,71 +1534,42 @@ function atualizarTabelaAssistencia(assistencias) {
 // ===============================================
 // 🟣 ABRIR MODAL EDITAR ASSISTÊNCIA - CORRIGIDO
 // ===============================================
-async function abrirModalEditarAssistencia(botao, idAssistencia) {
-    const cargo = localStorage.getItem("userRole") || "Funcionario";
-    if (cargo !== "Gerente") {
-        alert("❌ Apenas gerentes podem editar assistências!");
-        return;
-    }
-
+async function editarAssistencia(id) {
     try {
-        // ✅ Garante que os vendedores foram carregados antes de abrir
-        if (typeof carregarVendedores === "function") {
-            await carregarVendedores();
-        }
-        if (typeof preencherSelectVendedoresAssistencia === "function") {
-            preencherSelectVendedoresAssistencia();
-        }
-
-        // 🔹 Busca a assistência pelo ID
+        // 1) Busca a assistência
         const res = await fetch(`${API}/obter_assistencias`);
         const lista = await res.json();
-        const a = lista.find(x => x.id === idAssistencia);
-        if (!a) return alert("Assistência não encontrada!");
+        const a = lista.find(x => x.id === id);
+        if (!a) return alert("❌ Assistência não encontrada.");
 
-        // 🔹 Abrir modal e preencher campos
-        const modal = document.getElementById("modal-editar-assistencia");
-        modal.classList.remove("hidden");
-
-        document.getElementById("edit-assistencia-nome").value = a.nome_cliente || "";
-        document.getElementById("edit-assistencia-telefone").value = a.telefone_cliente || "";
-        document.getElementById("edit-assistencia-marca").value = a.marca_aparelho || "";
-        document.getElementById("edit-assistencia-modelo").value = a.modelo_aparelho || "";
-        document.getElementById("edit-assistencia-defeito").value = a.descricao_defeito || "";
-        document.getElementById("edit-assistencia-servico").value = a.servico_realizado || "";
-        document.getElementById("edit-assistencia-valor").value = a.valor_servico || "";
-        document.getElementById("edit-assistencia-pagamento").value = a.forma_pagamento || "cash";
-        document.getElementById("edit-assistencia-garantia").value = a.garantia || "30";
-
-        // ✅ Corrige captura de custo
-        let custoBruto = a.custo_servico || a.custo || "";
-        if (typeof custoBruto === "string") {
-            custoBruto = custoBruto.replace(/[^\d.,-]/g, "").replace(",", ".");
-        }
-        document.getElementById("edit-assistencia-custo").value = parseFloat(custoBruto) || "";
-
-        // ✅ Corrige seleção de vendedor
-        const selectVendedor = document.getElementById("edit-assistencia-vendedor");
-        if (selectVendedor) {
-            // Garante que há opções
-            if (selectVendedor.options.length === 0 && typeof preencherSelectVendedoresAssistencia === "function") {
-                preencherSelectVendedoresAssistencia();
-            }
-
-            // Tenta selecionar o vendedor
-            const vendedor = a.nome_vendedor?.trim() || "";
-            const option = [...selectVendedor.options].find(opt => opt.value === vendedor);
-            if (option) selectVendedor.value = vendedor;
-            else console.warn("⚠️ Vendedor não encontrado no select:", vendedor);
+        // 2) Garante que o select de vendedores está populado
+        if (typeof carregarVendedores === "function" && typeof preencherSelectVendedores === "function") {
+            const vendedores = await carregarVendedores();
+            preencherSelectVendedores("edit-assistencia-vendedor", a.nome_vendedor || "");
         }
 
-        // Guarda ID no modal (para o salvarEdicaoAssistencia)
-        modal.setAttribute("data-edit-id", idAssistencia);
+        // 3) Preenche os campos do modal de edição
+        document.getElementById('edit-assistencia-nome').value = a.nome_cliente || '';
+        document.getElementById('edit-assistencia-telefone').value = a.telefone_cliente || '';
+        document.getElementById('edit-assistencia-marca').value = a.marca_aparelho || '';
+        document.getElementById('edit-assistencia-modelo').value = a.modelo_aparelho || '';
+        document.getElementById('edit-assistencia-defeito').value = a.descricao_defeito || '';
+        document.getElementById('edit-assistencia-servico').value = a.servico_realizado || '';
+        document.getElementById('edit-assistencia-valor').value = a.valor_servico || '';
+        document.getElementById('edit-assistencia-pagamento').value = a.forma_pagamento || 'cash';
+        document.getElementById('edit-assistencia-garantia').value = a.garantia || '30';
+        document.getElementById('edit-assistencia-custo').value = a.custo_servico ?? '';
+
+        // 4) Guarda o ID no modal para o salvar
+        const modal = document.getElementById('modal-editar-assistencia');
+        modal?.setAttribute('data-edit-id', String(id));
+        modal?.classList.remove('hidden');
     } catch (err) {
-        console.error("❌ Erro ao carregar dados para edição:", err);
-        alert("Erro ao abrir a edição. Veja o console para detalhes.");
+        console.error("Erro ao carregar assistência:", err);
+        alert("❌ Erro ao carregar dados da assistência.");
     }
 }
+
 
 
 
