@@ -441,9 +441,9 @@ function carregarAssistencias() {
                 const statusHTML = statusPendente
                     ? `<button onclick="abrirModalCustoAssistencia(${a.id})"
                           class="bg-yellow-100 text-yellow-800 border border-yellow-400 px-2 py-1 rounded font-semibold hover:bg-yellow-200 transition">
-                          ⚠️ Pendente
+                          Pendente
                        </button>`
-                    : `<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold">✅ Concluído</span>`;
+                    : `<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold">Concluído</span>`;
 
                 // 🔹 Criar linha da tabela
                 const tr = document.createElement("tr");
@@ -1507,6 +1507,74 @@ function atualizarTabelaAssistencia(assistencias) {
 }
 
 
+// ===============================================
+// 🟣 ABRIR MODAL EDITAR ASSISTÊNCIA - CORRIGIDO
+// ===============================================
+async function abrirModalEditarAssistencia(botao, idAssistencia) {
+    const cargo = localStorage.getItem("userRole") || "Funcionario";
+    if (cargo !== "Gerente") {
+        alert("❌ Apenas gerentes podem editar assistências!");
+        return;
+    }
+
+    try {
+        // ✅ Garante que os vendedores foram carregados antes de abrir
+        if (typeof carregarVendedores === "function") {
+            await carregarVendedores();
+        }
+        if (typeof preencherSelectVendedoresAssistencia === "function") {
+            preencherSelectVendedoresAssistencia();
+        }
+
+        // 🔹 Busca a assistência pelo ID
+        const res = await fetch(`${API}/obter_assistencias`);
+        const lista = await res.json();
+        const a = lista.find(x => x.id === idAssistencia);
+        if (!a) return alert("Assistência não encontrada!");
+
+        // 🔹 Abrir modal e preencher campos
+        const modal = document.getElementById("modal-editar-assistencia");
+        modal.classList.remove("hidden");
+
+        document.getElementById("edit-assistencia-nome").value = a.nome_cliente || "";
+        document.getElementById("edit-assistencia-telefone").value = a.telefone_cliente || "";
+        document.getElementById("edit-assistencia-marca").value = a.marca_aparelho || "";
+        document.getElementById("edit-assistencia-modelo").value = a.modelo_aparelho || "";
+        document.getElementById("edit-assistencia-defeito").value = a.descricao_defeito || "";
+        document.getElementById("edit-assistencia-servico").value = a.servico_realizado || "";
+        document.getElementById("edit-assistencia-valor").value = a.valor_servico || "";
+        document.getElementById("edit-assistencia-pagamento").value = a.forma_pagamento || "cash";
+        document.getElementById("edit-assistencia-garantia").value = a.garantia || "30";
+
+        // ✅ Corrige captura de custo
+        let custoBruto = a.custo_servico || a.custo || "";
+        if (typeof custoBruto === "string") {
+            custoBruto = custoBruto.replace(/[^\d.,-]/g, "").replace(",", ".");
+        }
+        document.getElementById("edit-assistencia-custo").value = parseFloat(custoBruto) || "";
+
+        // ✅ Corrige seleção de vendedor
+        const selectVendedor = document.getElementById("edit-assistencia-vendedor");
+        if (selectVendedor) {
+            // Garante que há opções
+            if (selectVendedor.options.length === 0 && typeof preencherSelectVendedoresAssistencia === "function") {
+                preencherSelectVendedoresAssistencia();
+            }
+
+            // Tenta selecionar o vendedor
+            const vendedor = a.nome_vendedor?.trim() || "";
+            const option = [...selectVendedor.options].find(opt => opt.value === vendedor);
+            if (option) selectVendedor.value = vendedor;
+            else console.warn("⚠️ Vendedor não encontrado no select:", vendedor);
+        }
+
+        // Guarda ID no modal (para o salvarEdicaoAssistencia)
+        modal.setAttribute("data-edit-id", idAssistencia);
+    } catch (err) {
+        console.error("❌ Erro ao carregar dados para edição:", err);
+        alert("Erro ao abrir a edição. Veja o console para detalhes.");
+    }
+}
 
 
 
