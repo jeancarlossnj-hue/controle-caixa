@@ -497,8 +497,13 @@ function carregarAssistencias() {
 // ============================
 //  MODAL DETALHES ASSISTÊNCIA - ESTILO VENDAS
 // ============================
+// ============================
+//  MODAL DETALHES ASSISTÊNCIA - PADRÃO VENDAS
+// ============================
 function verDetalhesAssistencia(botao) {
     const celula = botao.closest("td");
+    if (!celula) return alert("❌ Erro: célula não encontrada!");
+
     const nome = celula.getAttribute("data-cliente");
     const marca = celula.getAttribute("data-marca");
     const modelo = celula.getAttribute("data-modelo");
@@ -510,6 +515,7 @@ function verDetalhesAssistencia(botao) {
     const status = celula.getAttribute("data-status");
     const dataRegistro = celula.getAttribute("data-data");
 
+    // Calcula lucro
     let lucroHTML = "";
     if (custo && custo !== "-" && custo !== "R$ -") {
         const valorNum = parseFloat(valor.replace("R$", "").trim()) || 0;
@@ -517,69 +523,66 @@ function verDetalhesAssistencia(botao) {
         const lucro = valorNum - custoNum;
         const margem = valorNum > 0 ? ((lucro / valorNum) * 100).toFixed(1) : "0.0";
         lucroHTML = `
-      <div class="text-center p-3 bg-green-50 rounded">
-        <div class="font-semibold text-green-800">Lucro Total</div>
-        <div class="text-lg font-bold">R$ ${lucro.toFixed(2)}</div>
-        <div class="text-sm text-green-600">Margem: ${margem}%</div>
-      </div>`;
+        <div class="text-center p-3 bg-green-50 rounded">
+            <div class="font-semibold text-green-800">Lucro Total</div>
+            <div class="text-lg font-bold">R$ ${lucro.toFixed(2)}</div>
+            <div class="text-sm text-green-600">Margem: ${margem}%</div>
+        </div>`;
     }
 
+    // Encontra o container correto do modal
     const detalhesDiv = document.getElementById("detalhes-assistencia-content");
+    if (!detalhesDiv) {
+        alert("❌ Erro: elemento #detalhes-assistencia-content não encontrado!");
+        return;
+    }
+
+    // Monta o HTML completo
     detalhesDiv.innerHTML = `
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="space-y-2">
-        <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Informações do Cliente</h3>
-        <div><strong>Cliente:</strong> ${nome}</div>
-        <div><strong>Marca:</strong> ${marca}</div>
-        <div><strong>Modelo:</strong> ${modelo}</div>
-        <div><strong>Vendedor/Técnico:</strong> ${vendedor}</div>
-        <div><strong>Data:</strong> ${dataRegistro || '-'}</div>
-        <div><strong>Status:</strong> 
-          <span class="px-2 py-1 rounded text-xs font-medium ${status.includes('pendente') ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">${status}</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="space-y-2">
+                <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Informações do Cliente</h3>
+                <div><strong>Cliente:</strong> ${nome}</div>
+                <div><strong>Marca:</strong> ${marca}</div>
+                <div><strong>Modelo:</strong> ${modelo}</div>
+                <div><strong>Vendedor/Técnico:</strong> ${vendedor}</div>
+                <div><strong>Data:</strong> ${dataRegistro || '-'}</div>
+                <div><strong>Status:</strong>
+                    <span class="px-2 py-1 rounded text-xs font-medium ${status.includes('pendente') ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">${status}</span>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Serviço e Pagamento</h3>
+                <div><strong>Serviço:</strong> ${servico}</div>
+                <div><strong>Forma de Pagamento:</strong> ${forma}</div>
+                <div><strong>Valor:</strong> ${valor}</div>
+                <div><strong>Custo:</strong> ${custo}</div>
+            </div>
         </div>
-      </div>
-      <div class="space-y-2">
-        <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Informações do Serviço</h3>
-        <div><strong>Serviço:</strong> ${servico}</div>
-        <div><strong>Forma de Pagamento:</strong> ${forma}</div>
-        <div><strong>Valor:</strong> ${valor}</div>
-        <div><strong>Custo:</strong> ${custo}</div>
-      </div>
-    </div>
 
-    <div class="border-t pt-4">
-      <h3 class="font-semibold text-gray-800 text-lg mb-2">Resumo Financeiro</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="text-center p-3 bg-blue-50 rounded">
-          <div class="font-semibold text-blue-800">Valor do Serviço</div>
-          <div class="text-lg font-bold">${valor}</div>
+        <div class="border-t pt-4">
+            <h3 class="font-semibold text-gray-800 text-lg mb-2">Resumo Financeiro</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="text-center p-3 bg-blue-50 rounded">
+                    <div class="font-semibold text-blue-800">Valor do Serviço</div>
+                    <div class="text-lg font-bold">${valor}</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded">
+                    <div class="font-semibold text-purple-800">Custo</div>
+                    <div class="text-lg font-bold">${custo}</div>
+                </div>
+                ${lucroHTML || `
+                    <div class="text-center p-3 bg-gray-50 rounded">
+                        <div class="font-semibold text-gray-800">Lucro</div>
+                        <div class="text-sm text-gray-600">Custo pendente</div>
+                    </div>`}
+            </div>
         </div>
-        <div class="text-center p-3 bg-purple-50 rounded">
-          <div class="font-semibold text-purple-800">Custo</div>
-          <div class="text-lg font-bold">${custo}</div>
-        </div>
-        ${lucroHTML || `
-          <div class="text-center p-3 bg-gray-50 rounded">
-            <div class="font-semibold text-gray-800">Lucro</div>
-            <div class="text-sm text-gray-600">Custo pendente</div>
-          </div>`}
-      </div>
-    </div>
-  `;
-
-    detalhesDiv.setAttribute("data-assistencia-detalhes", JSON.stringify({
-        nome_cliente: nome,
-        marca_aparelho: marca,
-        modelo_aparelho: modelo,
-        servico_realizado: servico,
-        valor_servico: parseFloat(valor.replace("R$", "").trim()) || 0,
-        forma_pagamento: forma,
-        nome_vendedor: vendedor,
-        data_registro: dataRegistro
-    }));
+    `;
 
     document.getElementById("modal-detalhes-assistencia").classList.remove("hidden");
 }
+
 
 // Fechar modal
 function fecharModalDetalhesAssistencia() {
@@ -956,41 +959,6 @@ function abrirModalEditarAssistencia(botao, idAssistencia) {
             document.getElementById("edit-assistencia-vendedor").value = a.nome_vendedor || "";
         })
         .catch(err => console.error("❌ Erro ao carregar dados para edição:", err));
-}
-
-
-function verDetalhesAssistencia(botao) {
-    const tr = botao.closest("tr");
-    if (!tr) return alert("❌ Linha não encontrada.");
-
-    // Busca os dados diretamente das células
-    const colunas = tr.querySelectorAll("td");
-    const dados = {
-        cliente: colunas[0]?.textContent.trim() || "-",
-        marca: colunas[1]?.textContent.trim() || "-",
-        modelo: colunas[2]?.textContent.trim() || "-",
-        servico: colunas[3]?.textContent.trim() || "-",
-        forma_pagamento: colunas[4]?.textContent.trim() || "-",
-        valor: colunas[5]?.textContent.trim() || "-",
-        custo: colunas[6]?.textContent.trim() || "-",
-        vendedor: colunas[7]?.textContent.trim() || "-",
-        status: colunas[8]?.textContent.trim() || "-"
-    };
-
-    // Monta o conteúdo do modal
-    const div = document.getElementById("conteudo-detalhes-assistencia");
-    div.innerHTML = `
-    <p><b>Cliente:</b> ${dados.cliente}</p>
-    <p><b>Marca:</b> ${dados.marca}</p>
-    <p><b>Modelo:</b> ${dados.modelo}</p>
-    <p><b>Serviço:</b> ${dados.servico}</p>
-    <p><b>Pagamento:</b> ${dados.forma_pagamento}</p>
-    <p><b>Valor:</b> ${dados.valor}</p>
-    <p><b>Custo:</b> ${dados.custo}</p>
-    <p><b>Vendedor:</b> ${dados.vendedor}</p>
-    <p><b>Status:</b> ${dados.status}</p>
-    `;
-    document.getElementById("modal-detalhes-assistencia").classList.remove("hidden");
 }
 
 
