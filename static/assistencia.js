@@ -966,7 +966,7 @@ function fecharModalCustoAssistencia() {
 
 
 // ============================
-// 🧾 EDITAR ASSISTÊNCIA
+// ✏️ EDITAR ASSISTÊNCIA - ABRE O MODAL CORRETO
 // ============================
 function editarAssistencia(id) {
     fetch(`${API}/obter_assistencias`)
@@ -975,28 +975,31 @@ function editarAssistencia(id) {
             const a = assistencias.find(item => item.id === id);
             if (!a) return alert("❌ Assistência não encontrada.");
 
-            // Preenche o formulário com os dados existentes
-            document.getElementById('service-customer-name').value = a.nome_cliente || '';
-            document.getElementById('service-customer-phone').value = a.telefone_cliente || '';
-            document.getElementById('device-model').value = a.marca_aparelho || '';
-            document.getElementById('device-brand').value = a.modelo_aparelho || '';
-            document.getElementById('defect-description').value = a.descricao_defeito || '';
-            document.getElementById('service-description').value = a.servico_realizado || '';
-            document.getElementById('service-value').value = a.valor_servico || '';
-            document.getElementById('service2-payment-method').value = a.forma_pagamento || '';
-            document.getElementById('vendedor-assistencia').value = a.nome_vendedor || '';
-            document.querySelector(`input[name="service-warranty"][value="${a.garantia}"]`)?.click();
+            // Preenche campos do modal de edição
+            document.getElementById('edit-assistencia-nome').value = a.nome_cliente || '';
+            document.getElementById('edit-assistencia-telefone').value = a.telefone_cliente || '';
+            document.getElementById('edit-assistencia-marca').value = a.marca_aparelho || '';
+            document.getElementById('edit-assistencia-modelo').value = a.modelo_aparelho || '';
+            document.getElementById('edit-assistencia-defeito').value = a.descricao_defeito || '';
+            document.getElementById('edit-assistencia-servico').value = a.servico_realizado || '';
+            document.getElementById('edit-assistencia-valor').value = a.valor_servico || '';
+            document.getElementById('edit-assistencia-pagamento').value = a.forma_pagamento || 'cash';
+            document.getElementById('edit-assistencia-garantia').value = a.garantia || '30';
+            document.getElementById('edit-assistencia-custo').value = a.custo_servico || '';
+            document.getElementById('edit-assistencia-vendedor').value = a.nome_vendedor || '';
 
-            // Guarda o ID para atualização posterior
-            document.getElementById('services-form').setAttribute('data-edit-id', id);
+            // Guarda o ID atual para salvar depois
+            document.getElementById('modal-editar-assistencia').setAttribute('data-edit-id', id);
 
-            alert("✏️ Modo edição ativado. Altere os campos e salve novamente.");
+            // Abre o modal
+            document.getElementById('modal-editar-assistencia').classList.remove('hidden');
         })
         .catch(err => {
             console.error("Erro ao carregar assistência:", err);
             alert("❌ Erro ao carregar dados da assistência.");
         });
 }
+
 
 // ============================
 // 💾 SALVAR EDIÇÃO (substitui o registro caso esteja em modo edição)
@@ -1226,9 +1229,44 @@ function salvarEdicaoAssistencia() {
 //  FECHAR MODAL EDITAR ASSISTÊNCIA
 // ============================
 function fecharModalEditarAssistencia() {
-    document.getElementById("modal-editar-assistencia").classList.add("hidden");
-    assistenciaIdEditando = null; // Limpar o ID
+    document.getElementById('modal-editar-assistencia').classList.add('hidden');
 }
+
+function salvarEdicaoAssistencia() {
+    const id = document.getElementById('modal-editar-assistencia').getAttribute('data-edit-id');
+    if (!id) return alert("❌ ID da assistência não encontrado.");
+
+    const dados = {
+        nome_cliente: document.getElementById('edit-assistencia-nome').value.trim(),
+        telefone_cliente: document.getElementById('edit-assistencia-telefone').value.trim(),
+        marca_aparelho: document.getElementById('edit-assistencia-marca').value.trim(),
+        modelo_aparelho: document.getElementById('edit-assistencia-modelo').value.trim(),
+        descricao_defeito: document.getElementById('edit-assistencia-defeito').value.trim(),
+        servico_realizado: document.getElementById('edit-assistencia-servico').value.trim(),
+        valor_servico: parseFloat(document.getElementById('edit-assistencia-valor').value) || 0,
+        forma_pagamento: document.getElementById('edit-assistencia-pagamento').value,
+        garantia: document.getElementById('edit-assistencia-garantia').value,
+        custo_servico: parseFloat(document.getElementById('edit-assistencia-custo').value) || 0,
+        nome_vendedor: document.getElementById('edit-assistencia-vendedor').value
+    };
+
+    fetch(`${API}/editar_assistencia/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("✅ Assistência atualizada com sucesso!");
+        fecharModalEditarAssistencia();
+        carregarAssistencias();
+    })
+    .catch(err => {
+        console.error("Erro ao salvar edição:", err);
+        alert("❌ Erro ao salvar edição.");
+    });
+}
+
 
 // ============================
 //  BUSCAR DETALHES ASSISTÊNCIA PARA EDIÇÃO (CORRETA)
