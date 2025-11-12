@@ -424,63 +424,72 @@ function carregarAssistencias() {
 
             assistencias.forEach(a => {
                 // 🔹 Corrigir formatação de custo
-                const custoBruto = a.custo_servico ? a.custo_servico.toString().replace(/[^\d.,-]/g, '') : null;
-                const custoNum = custoBruto ? parseFloat(custoBruto.replace(',', '.')) : null;
-                const custoTexto = (custoNum || custoNum === 0) && !isNaN(custoNum)
+                const custoRaw = a.custo_servico || a.custo || a.custo_bruto;
+                const custoNum = parseFloat(custoRaw) || 0;
+                const custoTexto = custoRaw && !isNaN(custoNum)
                     ? `R$ ${custoNum.toFixed(2)}`
                     : "-";
 
                 // 🔹 Corrigir formatação do valor
-                const valorTexto = a.valor_servico != null && !isNaN(parseFloat(a.valor_servico))
-                    ? `R$ ${parseFloat(a.valor_servico).toFixed(2)}`
+                const valorNum = parseFloat(a.valor_servico) || 0;
+                const valorTexto = a.valor_servico != null && !isNaN(valorNum)
+                    ? `R$ ${valorNum.toFixed(2)}`
                     : "-";
 
                 // 🔹 Status visual
                 const statusPendente = !a.custo_servico || a.status === "pendente";
                 const statusHTML = statusPendente
                     ? `<button onclick="abrirModalCustoAssistencia(${a.id})"
-                class="bg-yellow-200 text-yellow-800 border border-yellow-400 px-3 py-1 rounded font-semibold hover:bg-yellow-300 transition">
-                Pendente
-             </button>`
-                    : `<span class="bg-green-200 text-green-800 px-3 py-1 rounded font-semibold">Concluído</span>`;
+                          class="bg-yellow-100 text-yellow-800 border border-yellow-400 px-2 py-1 rounded font-semibold hover:bg-yellow-200 transition">
+                          ⚠️ Pendente
+                       </button>`
+                    : `<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold">✅ Concluído</span>`;
 
                 // 🔹 Criar linha da tabela
                 const tr = document.createElement("tr");
-                tr.className = "hover:bg-gray-50";
+                tr.className = "hover:bg-gray-50 text-xs sm:text-sm";
                 tr.innerHTML = `
-            <td class="px-4 py-3">${a.nome_cliente || "-"}</td>
-            <td class="px-4 py-3">${a.marca_aparelho || "-"}</td>
-            <td class="px-4 py-3">${a.modelo_aparelho || "-"}</td>
-            <td class="px-4 py-3">${a.servico_realizado || "-"}</td>
-            <td class="px-4 py-3">${a.forma_pagamento || "-"}</td>
-            <td class="px-4 py-3 whitespace-nowrap text-right">${valorTexto}</td>
-            <td class="px-4 py-3 whitespace-nowrap text-right">${custoTexto}</td>
-            <td class="px-4 py-3">${a.nome_vendedor || "-"}</td>
-            <td class="px-4 py-3">${statusHTML}</td>
+                    <td class="px-3 sm:px-4 py-2">${a.nome_cliente || "-"}</td>
+                    <td class="px-3 sm:px-4 py-2">${a.marca_aparelho || "-"}</td>
+                    <td class="px-3 sm:px-4 py-2">${a.modelo_aparelho || "-"}</td>
+                    <td class="px-3 sm:px-4 py-2">${a.servico_realizado || "-"}</td>
+                    <td class="px-3 sm:px-4 py-2">${traduzirPagamento(a.forma_pagamento)}</td>
+                    <td class="px-3 sm:px-4 py-2 text-right">${valorTexto}</td>
+                    <td class="px-3 sm:px-4 py-2 text-right">${custoTexto}</td>
+                    <td class="px-3 sm:px-4 py-2">${a.nome_vendedor || "-"}</td>
+                    <td class="px-3 sm:px-4 py-2 text-center">${statusHTML}</td>
 
-            <td class="text-center space-x-2"
-        data-telefone="${a.telefone_cliente || ''}"
-        data-pagamento="${a.forma_pagamento || 'cash'}"
-        data-garantia="${a.garantia || 30}"
-        data-vendedor="${a.nome_vendedor || ''}"
-        data-data-cadastro="${a.data_registro || new Date().toISOString()}">
+                    <!-- Botões de ação -->
+                    <td class="flex flex-col sm:flex-row gap-2 justify-center items-center py-2 sm:py-0 text-center"
+                        data-telefone="${a.telefone_cliente || ''}"
+                        data-pagamento="${a.forma_pagamento || 'cash'}"
+                        data-garantia="${a.garantia || 30}"
+                        data-vendedor="${a.nome_vendedor || ''}"
+                        data-data-cadastro="${a.data_registro || new Date().toISOString()}">
+                        
+                        <!-- Botão Detalhes -->
+                        <button onclick="abrirModalDetalhesAssistencia(this)"
+                                class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white text-xs sm:text-sm px-3 py-2 rounded transition flex items-center justify-center gap-1">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="hidden sm:inline">Detalhes</span>
+                        </button>
 
-        <button onclick="abrirModalDetalhesAssistencia(this)"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
-            Detalhes
-        </button>
+                        <!-- Botão Editar -->
+                        <button onclick="editarAssistencia(${a.id})"
+                                class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white text-xs sm:text-sm px-3 py-2 rounded transition flex items-center justify-center gap-1">
+                            <i class="fas fa-edit"></i>
+                            <span class="hidden sm:inline">Editar</span>
+                        </button>
 
-        <button onclick="editarAssistencia(${a.id})"
-                class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs">
-            Editar
-        </button>
+                        <!-- Botão Excluir -->
+                        <button onclick="excluirAssistencia(${a.id})"
+                                class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-3 py-2 rounded transition flex items-center justify-center gap-1">
+                            <i class="fas fa-trash-alt"></i>
+                            <span class="hidden sm:inline">Excluir</span>
+                        </button>
+                    </td>
+                `;
 
-        <button onclick="excluirAssistencia(${a.id})"
-                class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-            Excluir
-            </button>
-    </td>
-        `;
                 tabela.appendChild(tr);
             });
         })
@@ -488,9 +497,6 @@ function carregarAssistencias() {
 }
 
 
-// ============================
-//  MODAL DETALHES ASSISTÊNCIA - ESTILO VENDAS
-// ============================
 // ============================
 //  MODAL DETALHES ASSISTÊNCIA - PADRÃO VENDAS
 // ============================
