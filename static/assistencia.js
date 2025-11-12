@@ -764,10 +764,13 @@ function formatarData(dataString) {
     return data.toLocaleDateString('pt-BR');
 }
 
+
+
 // ============================
 //  MODAL DETALHES ASSISTÊNCIA - ATUALIZADO COM BOTÃO IMPRIMIR
 // ============================
-function abrirModalDetalhesAssistencia(botao) {
+document.addEventListener('DOMContentLoaded', () => {
+    function abrirModalDetalhesAssistencia(botao) {
     const linha = botao.closest("tr");
     const celulaAcoes = linha.querySelector("td:last-child");
 
@@ -970,6 +973,8 @@ function abrirModalDetalhesAssistencia(botao) {
 
     document.getElementById("modal-detalhes-assistencia").classList.remove("hidden");
 }
+});
+
 
 
 // ============================
