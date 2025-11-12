@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- 1️⃣ Bibliotecas obrigatórias -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </head>
 
@@ -349,9 +352,10 @@
             window.location.href = "./dashboard.html";
         }
     </script>
-    <script src="{{ url_for('static', filename='pdf-generator.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='assistencia.js') }}" defer></script>
-
+    <!-- 2️⃣ Scripts da aplicação -->
+    <script src="{{ url_for('static', filename='pdf-generator.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendedores.js') }}"></script>
+    <script src="{{ url_for('static', filename='assistencia.js') }}"></script>
 
 </body>
 
