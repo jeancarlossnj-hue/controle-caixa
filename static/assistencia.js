@@ -766,214 +766,110 @@ function formatarData(dataString) {
 
 
 
+
 // ============================
-//  MODAL DETALHES ASSISTÊNCIA - ATUALIZADO COM BOTÃO IMPRIMIR
+// MODAL DETALHES ASSISTÊNCIA
 // ============================
-document.addEventListener('DOMContentLoaded', () => {
-    function abrirModalDetalhesAssistencia(botao) {
+function abrirModalDetalhesAssistencia(botao) {
     const linha = botao.closest("tr");
     const celulaAcoes = linha.querySelector("td:last-child");
 
     console.log("=== DEBUG MODAL DETALHES ASSISTÊNCIA ===");
     console.log("Celula Acoes:", celulaAcoes);
     console.log("Data do cadastro:", celulaAcoes.getAttribute("data-data-cadastro"));
-    console.log("Garantia:", celulaAcoes.getAttribute("data-garantia"));
-    console.log("Vendedor:", celulaAcoes.getAttribute("data-vendedor"));
-    console.log("Telefone:", celulaAcoes.getAttribute("data-telefone"));
-    console.log("========================");
 
     const nome = linha.children[0].textContent;
-    const telefone = linha.children[1].textContent;
-    const marca = linha.children[2].textContent;
-    const modelo = linha.children[3].textContent;
+    const marca = linha.children[1].textContent;
+    const modelo = linha.children[2].textContent;
+    const servico = linha.children[3].textContent;
     const pagamento = linha.children[4].textContent;
     const valor = linha.children[5].textContent;
     const custo = linha.children[6].textContent;
     const vendedor = linha.children[7].textContent;
     const status = linha.children[8].textContent.trim();
 
-    const telefoneData = celulaAcoes.getAttribute("data-telefone");
+    const telefone = celulaAcoes.getAttribute("data-telefone");
     const formaPagamento = celulaAcoes.getAttribute("data-pagamento");
     const garantiaDias = celulaAcoes.getAttribute("data-garantia");
     const vendedorData = celulaAcoes.getAttribute("data-vendedor");
     const dataCadastro = celulaAcoes.getAttribute("data-data-cadastro");
 
-    // ... (código existente de formatação de data e garantia)
-
-    // Formatar data e hora do cadastro
+    // ==========================
+    // Formatação de datas
+    // ==========================
     let dataCadastroFormatada = 'Não informada';
     let horaCadastroFormatada = 'Não informada';
-    let dataValidadeGarantia = 'Não calculável';
-
-    if (dataCadastro && dataCadastro !== 'null' && dataCadastro !== 'undefined' && dataCadastro !== '' && dataCadastro !== '-') {
-        console.log("Processando data:", dataCadastro);
-        try {
-            const data = new Date(dataCadastro);
-            console.log("Data convertida:", data);
-
-            if (!isNaN(data.getTime())) {
-                dataCadastroFormatada = data.toLocaleDateString('pt-BR');
-                horaCadastroFormatada = data.toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-
-                console.log("Data formatada:", dataCadastroFormatada);
-                console.log("Hora formatada:", horaCadastroFormatada);
-
-                // Calcular validade da garantia
-                if (garantiaDias && garantiaDias !== 'null' && garantiaDias !== 'undefined' && garantiaDias !== '') {
-                    const dias = parseInt(garantiaDias);
-                    console.log("Dias de garantia:", dias);
-
-                    if (!isNaN(dias) && dias > 0) {
-                        const dataValidade = new Date(data);
-                        dataValidade.setDate(dataValidade.getDate() + dias);
-                        dataValidadeGarantia = dataValidade.toLocaleDateString('pt-BR');
-                        console.log("Validade garantia:", dataValidadeGarantia);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Erro ao processar data:", error);
+    if (dataCadastro && dataCadastro !== '-' && dataCadastro !== 'null') {
+        const data = new Date(dataCadastro);
+        if (!isNaN(data.getTime())) {
+            dataCadastroFormatada = data.toLocaleDateString('pt-BR');
+            horaCadastroFormatada = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         }
     }
 
+    // ==========================
     // Garantia
+    // ==========================
     let garantiaTexto = 'Não informada';
-    if (garantiaDias && garantiaDias !== 'null' && garantiaDias !== 'undefined' && garantiaDias !== '') {
+    if (garantiaDias && !isNaN(parseInt(garantiaDias))) {
         const dias = parseInt(garantiaDias);
-        if (!isNaN(dias) && dias > 0) {
-            garantiaTexto = `${dias} dias${dataValidadeGarantia !== 'Não calculável' ? ` (Válida até: ${dataValidadeGarantia})` : ''}`;
-        }
+        const validade = new Date(dataCadastro);
+        validade.setDate(validade.getDate() + dias);
+        garantiaTexto = `${dias} dias (até ${validade.toLocaleDateString('pt-BR')})`;
     }
 
+    // ==========================
     // Lucro
+    // ==========================
     let lucroHTML = '';
-    if (custo !== '-' && custo !== '' && custo !== 'R$ -') {
-        const valorLimpo = valor.replace('R$', '').replace(/\s/g, '').trim();
-        const custoLimpo = custo.replace('R$', '').replace(/\s/g, '').trim();
-
-        const valorNumerico = parseFloat(valorLimpo) || 0;
-        const custoNumerico = parseFloat(custoLimpo) || 0;
-
-        const lucro = valorNumerico - custoNumerico;
-        const margem = valorNumerico > 0 ? ((lucro / valorNumerico) * 100).toFixed(1) : '0.0';
-
-        const lucroFormatado = lucro.toFixed(2);
-
+    if (custo !== '-' && custo !== '') {
+        const v = parseFloat(valor.replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
+        const c = parseFloat(custo.replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
+        const lucro = (v - c).toFixed(2);
+        const margem = v > 0 ? ((lucro / v) * 100).toFixed(1) : 0;
         lucroHTML = `
-            <div class="text-center p-3 bg-green-50 rounded">
-                <div class="font-semibold text-green-800">Lucro Total</div>
-                <div class="text-lg font-bold">R$ ${lucroFormatado}</div>
-                <div class="text-sm text-green-600">Margem: ${margem}%</div>
-            </div>
-        `;
+      <div class="text-center p-3 bg-green-50 rounded">
+        <div class="font-semibold text-green-800">Lucro</div>
+        <div class="text-lg font-bold">R$ ${lucro}</div>
+        <div class="text-sm text-green-600">Margem: ${margem}%</div>
+      </div>`;
     }
 
+    // ==========================
+    // Inserir no modal
+    // ==========================
     const detalhesDiv = document.getElementById("detalhes-assistencia-content");
     if (!detalhesDiv) {
-        console.error("Elemento detalhes-assistencia-content não encontrado!");
+        alert("❌ Erro: elemento #detalhes-assistencia-content não encontrado no HTML!");
         return;
     }
 
     detalhesDiv.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Coluna 1 -->
-            <div class="space-y-3">
-                <div class="border-b pb-2">
-                    <h3 class="font-semibold text-gray-800 text-lg">Informações do Cliente</h3>
-                </div>
-                <div class="flex justify-between"><span class="font-medium">Nome:</span><span>${nome}</span></div>
-                <div class="flex justify-between"><span class="font-medium">Telefone:</span><span>${telefoneData || telefone || 'Não informado'}</span></div>
-                <div class="flex justify-between"><span class="font-medium">Vendedor:</span><span>${vendedorData || vendedor || '-'}</span></div>
-                <div class="flex justify-between"><span class="font-medium">Data do Cadastro:</span><span>${dataCadastroFormatada}</span></div>
-                <div class="flex justify-between"><span class="font-medium">Hora do Cadastro:</span><span>${horaCadastroFormatada}</span></div>
-                <div class="flex justify-between">
-                    <span class="font-medium">Status:</span>
-                    <span class="px-3 py-1 rounded text-xs font-medium ${custo === '-' || custo === 'R$ -' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
-                        ${custo === '-' || custo === 'R$ -' ? '⚠️ Pendente' : '✅ Concluído'}
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Coluna 2 -->
-            <div class="space-y-3">
-                <div class="border-b pb-2">
-                    <h3 class="font-semibold text-gray-800 text-lg">Informações do Aparelho</h3>
-                </div>
-                <div class="flex justify-between"><span class="font-medium">Marca:</span><span>${marca}</span></div>
-                <div class="flex justify-between"><span class="font-medium">Modelo:</span><span>${modelo}</span></div>
-                <div class="flex justify-between"><span class="font-medium">Forma de Pagamento:</span><span>${pagamento}</span></div>
-                <div class="flex justify-between"><span class="font-medium">Garantia:</span><span>${garantiaTexto}</span></div>
-            </div>
-        </div>
-        
-        <!-- Financeiro -->
-        <div class="border-t pt-4 mb-6">
-            <h3 class="font-semibold text-gray-800 text-lg mb-3">Informações Financeiras</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="text-center p-3 bg-blue-50 rounded">
-                    <div class="font-semibold text-blue-800">Valor do Serviço</div>
-                    <div class="text-lg font-bold">${valor}</div>
-                </div>
-                <div class="text-center p-3 bg-purple-50 rounded">
-                    <div class="font-semibold text-purple-800">Custo</div>
-                    <div class="text-lg font-bold">${custo}</div>
-                </div>
-                ${lucroHTML || `
-                    <div class="text-center p-3 bg-gray-50 rounded">
-                        <div class="font-semibold text-gray-800">Lucro</div>
-                        <div class="text-sm text-gray-600">Custo pendente</div>
-                    </div>
-                `}
-            </div>
-        </div>
-        
-        <!-- Pagamento -->
-        <div class="border-t pt-4">
-            <h3 class="font-semibold text-gray-800 text-lg mb-3">Detalhes do Pagamento</h3>
-            <div class="bg-gray-50 p-4 rounded">
-                <div class="flex justify-between items-center">
-                    <span class="font-medium">Método:</span>
-                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">${pagamento}</span>
-                </div>
-                ${formaPagamento && formaPagamento.includes('_') ? `
-                    <div class="mt-2 text-sm text-gray-600">
-                        <p>Pagamento dividido em duas formas</p>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-
-        <!-- Botão Imprimir Cupom -->
-        <div class="border-t pt-4 mt-6">
-            <div class="flex justify-center">
-                <button onclick="imprimirCupomAssistencia(this)" 
-                        class="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
-                    <i class="fas fa-print"></i>
-                    Imprimir Cupom
-                </button>
-            </div>
-        </div>
-    `;
-
-    // Armazenar dados para uso no PDF
-    detalhesDiv.setAttribute('data-assistencia-detalhes', JSON.stringify({
-        nome_cliente: nome,
-        telefone_cliente: telefoneData || telefone || '',
-        marca_aparelho: marca,
-        modelo_aparelho: modelo,
-        valor_servico: valor.replace('R$ ', ''),
-        forma_pagamento: formaPagamento || 'cash',
-        periodo_garantia: garantiaDias || '30',
-        nome_vendedor: vendedorData || vendedor || '',
-        data_cadastro: dataCadastro
-    }));
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="space-y-2">
+        <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Cliente e Aparelho</h3>
+        <div><b>Cliente:</b> ${nome}</div>
+        <div><b>Marca:</b> ${marca}</div>
+        <div><b>Modelo:</b> ${modelo}</div>
+        <div><b>Vendedor:</b> ${vendedorData || vendedor}</div>
+        <div><b>Data:</b> ${dataCadastroFormatada}</div>
+        <div><b>Hora:</b> ${horaCadastroFormatada}</div>
+        <div><b>Status:</b> ${status}</div>
+      </div>
+      <div class="space-y-2">
+        <h3 class="font-semibold text-gray-800 text-lg border-b pb-2">Financeiro</h3>
+        <div><b>Pagamento:</b> ${pagamento}</div>
+        <div><b>Garantia:</b> ${garantiaTexto}</div>
+        <div><b>Valor:</b> ${valor}</div>
+        <div><b>Custo:</b> ${custo}</div>
+      </div>
+    </div>
+    <div class="border-t pt-4">${lucroHTML}</div>
+  `;
 
     document.getElementById("modal-detalhes-assistencia").classList.remove("hidden");
 }
-});
+
 
 
 

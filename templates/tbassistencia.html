@@ -214,6 +214,35 @@
         </div>
     </div>
 
+
+    <!-- ========================= -->
+    <!-- MODAL DE DETALHES ASSISTÊNCIA -->
+    <!-- ========================= -->
+    <div id="modal-detalhes-assistencia"
+        class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-2xl mx-auto shadow-lg overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-lg font-semibold text-gray-800">Detalhes da Assistência</h3>
+                <button onclick="fecharModalDetalhesAssistencia()"
+                    class="text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <!-- 🔽 ESSA DIV É O ALVO DO innerHTML -->
+            <div id="detalhes-assistencia-content" class="text-sm text-gray-700 space-y-3">
+                <!-- conteúdo dinâmico vem via JS -->
+            </div>
+
+            <div class="border-t pt-4 mt-4 flex justify-center">
+                <button onclick="imprimirCupomAssistencia()"
+                    class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-print"></i>
+                    Imprimir Cupom
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Modal de Edição Assistência - Melhorado -->
     <div id="modal-editar-assistencia"
         class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-3 sm:p-4 overflow-y-auto">
@@ -306,29 +335,6 @@
                 <button onclick="salvarEdicaoAssistencia()"
                     class="px-3 py-1.5 sm:px-4 sm:py-2 rounded bg-blue-500 text-white hover:bg-blue-600 text-xs sm:text-sm">
                     Salvar
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- Modal Detalhes Assistência -->
-    <div id="modal-detalhes-assistencia"
-        class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white p-6 rounded-lg w-full max-w-2xl mx-auto shadow-lg overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-lg font-semibold text-gray-800">Detalhes da Assistência</h3>
-                <button onclick="fecharModalDetalhesAssistencia()"
-                    class="text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
-            </div>
-
-            <div id="detalhes-assistencia-content" class="text-sm text-gray-700 space-y-3">
-                <!-- conteúdo dinâmico aqui -->
-            </div>
-
-            <div class="border-t pt-4 mt-4 flex justify-center">
-                <button onclick="imprimirCupomAssistencia()"
-                    class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-                    <i class="fas fa-print"></i>
-                    Imprimir Cupom
                 </button>
             </div>
         </div>
